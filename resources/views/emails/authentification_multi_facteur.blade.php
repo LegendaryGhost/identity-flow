@@ -54,7 +54,7 @@
                             <tr>
                                 <td style="font-size: 14px; color: #6c757d;">
                                     <p style="margin: 0; line-height: 1.5;">
-                                        <strong>⚠️ Important :</strong> Ce code expire dans 5 minutes. Ne le partagez
+                                        <strong>⚠️ Important :</strong> Ce code expire dans 90 secondes. Ne le partagez
                                         avec personne.
                                     </p>
                                 </td>

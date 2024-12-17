@@ -12,7 +12,6 @@ class ResetPasswordEmail extends BaseEmail
             'name' => $nameUser,
             'resetLink' => $resetLink,
         ]);
-
         $this->viewName = 'emails.reset_password';
         $this->subjectLine = 'Réinitialisez votre mot de passe';
     }

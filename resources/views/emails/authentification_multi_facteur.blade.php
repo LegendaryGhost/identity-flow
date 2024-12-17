@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Validation de votre compte</title>
+    <title>Code d'authentification</title>
 </head>
 <body
     style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; line-height: 1.6; color: #1a1a1a; background-color: #f4f6f9;">
@@ -16,23 +16,32 @@
                 <tr>
                     <td style="padding: 40px; text-align: center;">
                         <div style="font-size: 48px; color: #4a90e2; margin-bottom: 20px;">
-                            ✅
+                            🔐
                         </div>
-                        <h1 style="margin: 0 0 15px 0; font-size: 24px; font-weight: 600; color: #1a1a1a;">Confirmez
-                            votre adresse email</h1>
-                        <p style="margin: 0 0 25px 0; font-size: 16px; color: #6c757d;">Bienvenue, {{ $name }} ! Validez
-                            votre compte en cliquant sur le bouton ci-dessous.</p>
+                        <h1 style="margin: 0 0 15px 0; font-size: 24px; font-weight: 600; color: #1a1a1a;">Code
+                            d'authentification</h1>
+                        <p style="margin: 0 0 25px 0; font-size: 16px; color: #6c757d;">Bonjour {{ $name }}, voici votre
+                            code d'authentification :</p>
                     </td>
                 </tr>
                 <tr>
-                    <td align="center" style="padding: 0 40px 40px;">
-                        <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+                    <td style="padding: 0 40px 30px;">
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                             <tr>
-                                <td align="center" style="border-radius: 6px;" bgcolor="#27ae60">
-                                    <a href="{{ $validationLink }}" target="_blank"
-                                       style="font-size: 16px; font-family: 'Inter', Arial, sans-serif; color: white; text-decoration: none; border-radius: 6px; padding: 12px 24px; display: inline-block; font-weight: 600; background-color: #27ae60; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                                        Confirmer mon email
-                                    </a>
+                                <td align="center">
+                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            @foreach($code as $digit)
+                                                <td style="padding: 0 4px;">
+                                                    <div
+                                                        style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; width: 45px; height: 60px; display: inline-block; text-align: center; line-height: 60px;">
+                                                        <span
+                                                            style="font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; color: #1a1a1a;">{{ $digit }}</span>
+                                                    </div>
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    </table>
                                 </td>
                             </tr>
                         </table>
@@ -45,8 +54,8 @@
                             <tr>
                                 <td style="font-size: 14px; color: #6c757d;">
                                     <p style="margin: 0; line-height: 1.5;">
-                                        <strong>✋ Attention :</strong> Si vous n'avez pas créé ce compte, vous pouvez
-                                        ignorer cet email.
+                                        <strong>⚠️ Important :</strong> Ce code expire dans 5 minutes. Ne le partagez
+                                        avec personne.
                                     </p>
                                 </td>
                             </tr>
@@ -56,10 +65,9 @@
                 <tr>
                     <td style="padding: 0 40px 40px; text-align: center;">
                         <p style="margin: 0; font-size: 14px; color: #6c757d;">
-                            Le lien expire dans 24 heures. Si vous rencontrez des problèmes,
-                            <a href="https://github.com/LegendaryGhost/identity-flow"
-                               style="color: #27ae60; text-decoration: none;">contactez
-                                le support</a>
+                            Si vous n'avez pas demandé ce code, ignorez cet email et
+                            <a href="#" style="color: #27ae60; text-decoration: none;">contactez immédiatement le
+                                support</a>
                         </p>
                     </td>
                 </tr>
@@ -68,7 +76,8 @@
                    style="margin-top: 20px; text-align: center;">
                 <tr>
                     <td style="font-size: 12px; color: #6c757d;">
-                        © 2024 Tous droits réservés
+                        © 2024 Tous droits réservés<br>
+                        Cet email a été envoyé automatiquement, merci de ne pas y répondre.
                     </td>
                 </tr>
             </table>

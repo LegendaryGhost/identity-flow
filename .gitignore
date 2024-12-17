@@ -158,4 +158,8 @@ fabric.properties
 .history
 .ionide
 
+.idea
+package-lock.json
+
+
 # End of https://www.toptal.com/developers/gitignore/api/laravel,phpstorm,visualstudiocode

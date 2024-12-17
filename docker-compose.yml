@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+    laravel_app:
+        container_name: laravel_identity_flow
+        #    image: tiarintsoa/laravel_identity_flow:1.0.0
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "8000:8000"
+        env_file:
+            - .env
+        depends_on:
+            - db
+
+    db:
+        container_name: laravel_db
+        image: postgres:15-alpine
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: identity_flow
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: [ "CMD", "pg_isready", "-d", "identity_flow", "-U", "postgres" ]
+            timeout: 5s
+            retries: 5
+            start_period: 60s
+
+volumes:
+    postgres_data: {}

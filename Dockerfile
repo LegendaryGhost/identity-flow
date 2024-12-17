@@ -16,10 +16,10 @@ COPY composer.json composer.lock ./
 
 # Install Composer
 COPY --from=composer:2.8.3 /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
 
 # Copy application code
 COPY . .
+RUN composer install --no-dev --optimize-autoloader
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \

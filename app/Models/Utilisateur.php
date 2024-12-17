@@ -2,24 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Utilisateur extends Model
 {
-    use HasFactory;
+    protected $table = 'utilisateur';
 
-    protected $table = "utilisateur";
-    protected $primaryKey = "id_utilisateur";
     protected $fillable = [
         'email',
         'nom',
         'prenom',
         'mot_de_passe',
-        'date_naissance',
+        'date_naissance'
     ];
-    public $timestamps = true;
+
+    protected $hidden = ['mot_de_passe'];
 
     public function tokens(): HasMany
     {
@@ -30,5 +28,4 @@ class Utilisateur extends Model
     {
         return $this->hasMany(CodePin::class, 'id_utilisateur');
     }
-
 }

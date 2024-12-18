@@ -1,32 +1,43 @@
 FROM php:8.2-cli
 
-# Install dependencies
+# Installer les dépendances nécessaires
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libzip-dev \
     unzip \
     git \
-    && docker-php-ext-install pdo_pgsql zip
+    && docker-php-ext-install pdo_pgsql zip 
 
-# Set working directory
+# Définir le répertoire de travail
 WORKDIR /var/www/html
 
-# Copy only composer files first for caching
-COPY composer.json composer.lock ./
+# Copier uniquement les fichiers Composer pour le cache
+COPY composer.json composer.lock ./ 
 
-# Install Composer
+# Installer Composer
 COPY --from=composer:2.8.3 /usr/bin/composer /usr/bin/composer
 
-# Copy application code
+# Copier le code de l'application
 COPY . .
-RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
+# Installer les dépendances Laravel
+RUN composer install --no-dev --optimize-autoloader --prefer-dist
+
+# Générer la clé Laravel
+RUN php artisan key:generate
+
+# Configurer les permissions pour le stockage et le cache de Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port
+# Créer les répertoires requis avec les bonnes permissions
+# RUN mkdir -p storage/framework/sessions \
+#     && mkdir -p storage/logs \
+#     && chmod -R 775 storage \
+#     && chmod -R 775 bootstrap/cache
+
+# Exposer le port 8000
 EXPOSE 8000
 
-# Command to run Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Démarrer Laravel avec le script pour attendre PostgreSQL
+CMD ["sh", "-c", "./wait-for-it.sh postgres_identity_flow:5432 -- php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]

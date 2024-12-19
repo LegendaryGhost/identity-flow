@@ -23,6 +23,10 @@ COPY . .
 # Installer les dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
+# # Installer Swagger
+# RUN composer require darkaonline/l5-swagger \
+#     && php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider"
+
 # Générer la clé Laravel
 RUN php artisan key:generate
 

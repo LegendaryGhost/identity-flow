@@ -2,7 +2,7 @@
 
 namespace App\Http\Responses;
 
-class SuccessResponse extends AbstractFormattedApiResponse
+class SuccessResponseContent extends AbstractApiResponseContent
 {
     private array $data;
 
@@ -12,7 +12,7 @@ class SuccessResponse extends AbstractFormattedApiResponse
         $this->data = $data;
     }
 
-    public function setStatusCode(int $statusCode): AbstractFormattedApiResponse
+    public function setStatusCode(int $statusCode): AbstractApiResponseContent
     {
         if ($statusCode == null) $statusCode = 200;
 
@@ -24,7 +24,7 @@ class SuccessResponse extends AbstractFormattedApiResponse
         return $this->data;
     }
 
-    public function setData(array $data): SuccessResponse
+    public function setData(array $data): SuccessResponseContent
     {
         $this->data = $data;
         return $this;

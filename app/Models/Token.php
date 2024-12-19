@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Token extends Model
 {
+    public $timestamps = false;
+
     protected $table = "token";
 
     protected $fillable = [

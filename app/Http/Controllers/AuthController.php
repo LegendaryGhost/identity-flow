@@ -2,24 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Responses\ErrorResponse;
-use App\Http\Responses\SuccessResponse;
-use App\Models\Token;
+use App\Http\Responses\ErrorResponseContent;
+use App\Http\Responses\SuccessResponseContent;
 use App\Models\Utilisateur;
-use App\Models\UtilisateurTemporaire;
-use App\Services\TokenService;
+use App\Utils;
+use Cache;
+use Hash;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Str;
 
 class AuthController extends Controller
 {
-    private readonly TokenService $tokenService;
-
-    public function __construct(TokenService $tokenService)
-    {
-        $this->tokenService = $tokenService;
-    }
+    private const TEMPORARY_USER_KEY = 'temp_user_';
 
     public function inscription(Request $request)
     {
@@ -31,46 +25,37 @@ class AuthController extends Controller
             'mot_de_passe'   => ['required', 'string', 'min:6']
         ]);
 
-        $tokenVerification = $this->tokenService->generateToken();
-        UtilisateurTemporaire::create([
-            'email'              => $validatedData['email'],
-            'nom'                => $validatedData['nom'],
-            'prenom'             => $validatedData['prenom'],
-            'date_naissance'     => $validatedData['date_naissance'],
-            'mot_de_passe'       => bcrypt($validatedData['mot_de_passe']),
-            'token_verification' => $tokenVerification
-        ]);
+        Cache::put(self::TEMPORARY_USER_KEY . Utils::generateToken(), [
+            'email'          => $validatedData['email'],
+            'nom'            => $validatedData['nom'],
+            'prenom'         => $validatedData['prenom'],
+            'date_naissance' => $validatedData['date_naissance'],
+            'mot_de_passe'   => Hash::make($validatedData['mot_de_passe'])
+        ], /* TODO: Paramétrable depuis la configuration */60);
 
         // Envoi d'email
 
-        return (new SuccessResponse(Response::HTTP_CREATED, 'Un email de vérification vous a été envoyé'))
-            ->toJson();
+        return (new SuccessResponseContent(Response::HTTP_CREATED, 'Un email de vérification vous a été envoyé'))
+            ->createJsonResponse();
     }
 
     public function verificationEmail(string $tokenVerification)
     {
-        $utilisateurTemporaire = UtilisateurTemporaire::where('token_verification', $tokenVerification)->first();
+        $utilisateurTemporaire = Cache::pull(self::TEMPORARY_USER_KEY . $tokenVerification);
         if (!$utilisateurTemporaire)
-            return (new ErrorResponse(Response::HTTP_NOT_FOUND, 'Token de vérification invalide'))->toJson();
+            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, 'Token de vérification invalide'))
+                ->createJsonResponse();
 
-        $utilisateur = Utilisateur::create([
-            'email'          => $utilisateurTemporaire->email,
-            'nom'            => $utilisateurTemporaire->nom,
-            'prenom'         => $utilisateurTemporaire->prenom,
-            'date_naissance' => $utilisateurTemporaire->date_naissance,
-            'mot_de_passe'   => $utilisateurTemporaire->mot_de_passe
-        ]);
-        $utilisateurTemporaire->delete();
-
-        $valeurToken = $this->tokenService->generateToken();
-        $token = Token::create([
-            'valeur'         => $this->tokenService->hashToken($valeurToken),
-            'utilisateur_id' => $utilisateur->id,
+        Utilisateur::create([
+            'email'          => $utilisateurTemporaire['email'],
+            'nom'            => $utilisateurTemporaire['nom'],
+            'prenom'         => $utilisateurTemporaire['prenom'],
+            'date_naissance' => $utilisateurTemporaire['date_naissance'],
+            'mot_de_passe'   => $utilisateurTemporaire['mot_de_passe']
         ]);
 
-        return (new SuccessResponse((int) null,
-            'Votre email a été vérifié. Votre compte a été créé avec succès',
-            ['token' => $token]))->toJson();
+        return (new SuccessResponseContent((int) null,'Votre email a été vérifié. Votre compte a été créé avec succès'))
+            ->createJsonResponse();
     }
 
     public function connexion(Request $request)

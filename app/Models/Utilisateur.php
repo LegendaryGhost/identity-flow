@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Utilisateur extends Model
 {
+    public $timestamps = false;
+
     protected $table = 'utilisateur';
 
     protected $fillable = [

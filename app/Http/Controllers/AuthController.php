@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Mail\AuthMultiFacteur;
 use App\Mail\ResetTentative;
+use App\Mail\ValidationInscription;
 use App\Models\Token;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 
 use App\Models\CodePin;
@@ -22,7 +24,7 @@ class AuthController extends Controller
 {
     private const TEMPORARY_USER_KEY = 'temp_user_';
 
-    public function inscription(Request $request)
+    public function inscription(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
             'email'          => ['required', 'string', 'email', 'max:75', 'unique:utilisateur'],
@@ -32,21 +34,23 @@ class AuthController extends Controller
             'mot_de_passe'   => ['required', 'string', 'min:6']
         ]);
 
-        Cache::put(self::TEMPORARY_USER_KEY . Utils::generateToken(), [
+        $tokenVerification =  Utils::generateToken();
+        Cache::put(self::TEMPORARY_USER_KEY .$tokenVerification, [
             'email'          => $validatedData['email'],
             'nom'            => $validatedData['nom'],
             'prenom'         => $validatedData['prenom'],
             'date_naissance' => $validatedData['date_naissance'],
             'mot_de_passe'   => Hash::make($validatedData['mot_de_passe'])
-        ], /* TODO: Paramétrable depuis la configuration */60);
+        ], 120);
 
-        // Envoi d'email
+        $linkValidation = url("http://localhost:8000/api/auth/verification-email/".$tokenVerification);
+        Mail::to($validatedData['email'])->send(new ValidationInscription($validatedData['nom'],$linkValidation));
 
         return (new SuccessResponseContent(Response::HTTP_CREATED, 'Un email de vérification vous a été envoyé'))
             ->createJsonResponse();
     }
 
-    public function verificationEmail(string $tokenVerification)
+    public function verificationEmail(string $tokenVerification): JsonResponse
     {
         $utilisateurTemporaire = Cache::pull(self::TEMPORARY_USER_KEY . $tokenVerification);
         if (!$utilisateurTemporaire)
@@ -65,7 +69,7 @@ class AuthController extends Controller
             ->createJsonResponse();
     }
 
-    public function login(Request $request)
+    public function connexion(Request $request): JsonResponse
     {
         $email = $request['email'];
         $request->validate([
@@ -77,21 +81,20 @@ class AuthController extends Controller
         if ($utilisateur->tentatives_connexion == $nombreTentative) {
             $dureeVieTentaive = Cache::get('duree_vie_tentative');
             // cree un token de reinitialisation
-            $token_tentative = "vñmñkmvklr";
+            $token_tentative = Utils::generateToken();
             Cache::put("reinitialisation_tentative_{$utilisateur->email}", $token_tentative, Carbon::now()->addSeconds($dureeVieTentaive));
             $restLink = url("http://127.0.0.1:8000/api/auth/reinitialisation-tentative?email={$utilisateur->email}&token={$token_tentative}");
             Mail::to($utilisateur->email)->send(new ResetTentative($utilisateur->nom,$restLink));
-            return response()->json([
-                'error' => 'Votre compte est verrouillé. Vérifiez vos e-mails pour le déverrouiller.'
-            ], 423);
+            return (new ErrorResponseContent(Response::HTTP_LOCKED,
+                'Votre compte est verrouillé. Vérifiez vos e-mails pour le déverrouiller.'))
+                ->createJsonResponse();
         }
-        //!Hash::check($request["mot_de_passe"], $utilisateur->motDePasse)
-        if (!$utilisateur || !($request["mot_de_passe"] == $utilisateur->mot_de_passe)) {
+        if (!$utilisateur || !Hash::check($request["mot_de_passe"], $utilisateur->mot_de_passe)) {
             $utilisateur->tentatives_connexion++;
             $utilisateur->save();
-            return response([
-                'message' => ['Ces informations d\'identification ne correspondent pas à nos enregistrements.']
-            ], 404);
+            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND,
+                'Ces informations d\'identification ne correspondent pas à nos enregistrements.'))
+                ->createJsonResponse();
         }
         $pin = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
         $dureeViePin = Cache::get('duree_vie_pin');
@@ -102,12 +105,11 @@ class AuthController extends Controller
         ];
         CodePin::create($codePin);
         Mail::to($utilisateur->email)->send(new AuthMultiFacteur($utilisateur->nom, str_split($pin)));
-        return response([
-            'message' => "code de validation envoyer a " . $utilisateur->email
-        ], 200);
+        return (new SuccessResponseContent(Response::HTTP_CREATED, "code de validation envoyer a " . $utilisateur->email))
+            ->createJsonResponse();
     }
 
-    public function verificationPin(Request $request)
+    public function verificationPin(Request $request): JsonResponse
     {
         $email = $request['email'];
         $pinValeur = $request['code_pin'];
@@ -122,10 +124,11 @@ class AuthController extends Controller
         $expiration = Carbon::parse($codePin->date_heure_expiration);
 
         if (!$utilisateur || $codePin->valeur !== $pinValeur ||  $expiration->isBefore(Carbon::now())) {
-            return response()->json(['error' => 'Invalid or expired PIN'], 401);
+            return (new ErrorResponseContent(Response::HTTP_UNAUTHORIZED, 'Code Pin de vérification invalide ou expiré'))
+                ->createJsonResponse();
         }
         // cree un token de reinitialisation
-        $token = "eoifjvñkñvñk";
+        $token = Utils::generateToken();
 
         $dureeVieToken = Cache::get('duree_vie_token');
 
@@ -136,19 +139,20 @@ class AuthController extends Controller
             "id_utilisateur" => $utilisateur->id
         ];
         Token::create($tokenData);
-        return response([
-            'message' => 'utilisateur authentifiée avec succes'
-        ], 200);
+        return (new SuccessResponseContent(Response::HTTP_OK, 'Utilisateur authentifié avec succès',["token"=>$token]))
+            ->createJsonResponse();
+
     }
 
-    public function reinitialisationTentative(Request $request)
+    public function reinitialisationTentative(Request $request): JsonResponse
     {
         $email = $request->input('email');
         $token = $request->input('token');
 
         $cachedToken = Cache::get("reinitialisation_tentative_{$email}");
         if (!$cachedToken || $cachedToken !== $token) {
-            return response()->json(['message' => 'Token invalide ou expiré.'], 400);
+            return (new ErrorResponseContent(Response::HTTP_BAD_REQUEST, 'Token invalide ou expiré'))
+                ->createJsonResponse();
         }
 
         $utilisateur = Utilisateur::where('email', $email)->first();
@@ -156,8 +160,10 @@ class AuthController extends Controller
             $utilisateur->tentatives_connexion = 0;
             $utilisateur->save();
             Cache::forget("reinitialisation_tentative_{$email}");
-            return response()->json(['message' => 'Tentatives de connexion réinitialisées.']);
+            return (new SuccessResponseContent(Response::HTTP_OK, 'Tentatives de connexion réinitialisées.'))
+                ->createJsonResponse();
         }
-        return response()->json(['message' => 'Utilisateur non trouvé.'], 404);
+        return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, 'Utilisateur non trouvé'))
+            ->createJsonResponse();
     }
 }

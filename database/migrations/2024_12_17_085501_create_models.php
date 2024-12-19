@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('prenom', 75);
             $table->string('mot_de_passe', 255);
             $table->date('date_naissance');
+            $table->integer('tentatives_connexion')->default(0);
         });
 
         Schema::create('token', function (Blueprint $table) {

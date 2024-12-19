@@ -19,5 +19,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/email', [\App\Http\Controllers\TestEmail::class, 'sendEmail']);
-Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
-Route::post('/verification-pin',[\App\Http\Controllers\AuthController::class,'verificationPin']);
+Route::post('/auth/login', [\App\Http\Controllers\AuthController::class, 'login']);
+Route::post('/auth/verification-pin',[\App\Http\Controllers\AuthController::class,'verificationPin']);
+Route::get('/auth/reinitialisation-tentative',[\App\Http\Controllers\AuthController::class,'reinitialisationTentative']);

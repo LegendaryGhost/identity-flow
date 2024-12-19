@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Utilisateur extends Model
 {
     protected $table = 'utilisateur';
-
+    public $timestamps = false;
     protected $fillable = [
         'email',
         'nom',
         'prenom',
         'mot_de_passe',
-        'date_naissance'
+        'date_naissance',
+        'tentatives_connexion'
     ];
 
     protected $hidden = ['mot_de_passe'];

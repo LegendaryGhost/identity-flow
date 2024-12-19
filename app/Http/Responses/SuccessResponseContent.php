@@ -12,7 +12,7 @@ class SuccessResponseContent extends AbstractApiResponseContent
         $this->data = $data;
     }
 
-    public function setStatusCode(int $statusCode): AbstractApiResponseContent
+    public function setStatusCode(?int $statusCode): AbstractApiResponseContent
     {
         if ($statusCode == null) $statusCode = 200;
 

@@ -14,6 +14,3 @@ class ValidationInscription extends BaseEmail
         $this->subjectLine = 'Validez votre inscription';
     }
 }
-{
-
-}

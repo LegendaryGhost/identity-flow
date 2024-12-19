@@ -2,8 +2,8 @@
 
 namespace App\Http\Responses;
 
-use http\Exception\InvalidArgumentException;
 use Illuminate\Http\JsonResponse;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 abstract class AbstractApiResponseContent

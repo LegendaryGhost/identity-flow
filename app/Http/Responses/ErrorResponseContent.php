@@ -12,7 +12,7 @@ class ErrorResponseContent extends AbstractApiResponseContent
         $this->errors = $errors;
     }
 
-    public function setStatusCode(int $statusCode): AbstractApiResponseContent
+    public function setStatusCode(?int $statusCode): AbstractApiResponseContent
     {
         if ($statusCode == null) $statusCode = 500;
 

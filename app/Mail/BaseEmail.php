@@ -10,20 +10,19 @@ abstract class BaseEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $viewName;
-    protected $subjectLine;
-    protected $data = [];
+    protected string $viewName;
+    protected string $subjectLine;
+    protected array  $data;
 
     public function __construct($data = [])
     {
         $this->data = $data;
     }
 
-    public function build()
+    public function build(): BaseEmail
     {
         return $this->view($this->viewName)
             ->with($this->data)
             ->subject($this->subjectLine);
     }
 }
-

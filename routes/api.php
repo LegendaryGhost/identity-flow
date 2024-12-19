@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UtilisateurController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,9 +31,10 @@ Route::controller(AuthController::class)->prefix("/auth")->group(function () {
         Route::post('/verification-pin','verificationPin');
     });
 
-
     Route::get('/verification-email/{tokenVerification}', 'verificationEmail');
     Route::get('/reinitialisation-tentative','reinitialisationTentative');
 });
 
-
+Route::put('/utilisateurs', [UtilisateurController::class, 'modification'])
+    ->middleware('ensure_json_api_requests')
+    ->middleware('verify_bearer_token');

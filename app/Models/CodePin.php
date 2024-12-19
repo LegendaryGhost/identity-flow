@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CodePin extends Model
 {
+    public $timestamps = false;
     protected $table = 'code_pin';
-
     protected $fillable = [
         'valeur',
         'date_heure_expiration',

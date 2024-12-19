@@ -45,12 +45,6 @@ return new class extends Migration
                 ->on('utilisateur')
                 ->onDelete('cascade');
         });
-
-        Schema::create('configuration', function (Blueprint $table) {
-            $table->id();
-            $table->string('cle', 50);
-            $table->integer('valeur')->nullable();
-        });
     }
 
     /**
@@ -61,6 +55,5 @@ return new class extends Migration
         Schema::dropIfExists('utilisateur');
         Schema::dropIfExists('token');
         Schema::dropIfExists('code_pin');
-        Schema::dropIfExists('configuration');
     }
 };

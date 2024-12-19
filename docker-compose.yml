@@ -18,7 +18,6 @@ services:
         #     timeout: 10s
         #     retries: 3
         restart: unless-stopped
-        command: ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
 
     postgres_identity_flow:
         container_name: postgres_identity_flow

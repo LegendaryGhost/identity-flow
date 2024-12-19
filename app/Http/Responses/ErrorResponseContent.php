@@ -2,7 +2,7 @@
 
 namespace App\Http\Responses;
 
-class ErrorResponse extends AbstractFormattedApiResponse
+class ErrorResponseContent extends AbstractApiResponseContent
 {
     private array $errors;
 
@@ -12,7 +12,7 @@ class ErrorResponse extends AbstractFormattedApiResponse
         $this->errors = $errors;
     }
 
-    public function setStatusCode(int $statusCode): AbstractFormattedApiResponse
+    public function setStatusCode(int $statusCode): AbstractApiResponseContent
     {
         if ($statusCode == null) $statusCode = 500;
 
@@ -24,7 +24,7 @@ class ErrorResponse extends AbstractFormattedApiResponse
         return $this->errors;
     }
 
-    public function setErrors(array $errors): ErrorResponse
+    public function setErrors(array $errors): ErrorResponseContent
     {
         $this->errors = $errors;
         return $this;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Responses\ErrorResponse;
+use App\Http\Responses\ErrorResponseContent;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,9 +17,9 @@ class EnsureJsonApiRequests
     public function handle(Request $request, Closure $next): Response
     {
         if (!$request->isJson())
-            return (new ErrorResponse(Response::HTTP_BAD_REQUEST,
+            return (new ErrorResponseContent(Response::HTTP_BAD_REQUEST,
                 'Les requêtes destinées vers cette API doivent être au format "JSON".')
-            )->toJson();
+            )->createJsonResponse();
 
         $request->headers->set('Accept', 'application/json');
 

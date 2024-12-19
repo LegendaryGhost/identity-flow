@@ -6,7 +6,7 @@ use http\Exception\InvalidArgumentException;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
-abstract class AbstractFormattedApiResponse
+abstract class AbstractApiResponseContent
 {
     protected int    $statusCode;
     protected string $message;
@@ -23,10 +23,13 @@ abstract class AbstractFormattedApiResponse
         return $this->statusCode;
     }
 
-    public function setStatusCode(int $statusCode): AbstractFormattedApiResponse
+    public function setStatusCode(int $statusCode): AbstractApiResponseContent
     {
+        if (array_key_exists($statusCode, Response::$statusTexts) === false)
+            throw new InvalidArgumentException(sprintf('Le code de status "%d" est invalide', $statusCode));
+
         $this->statusCode = $statusCode;
-        $this->setStatus();
+        $this->status     = Response::$statusTexts[$statusCode];
         return $this;
     }
 
@@ -35,7 +38,7 @@ abstract class AbstractFormattedApiResponse
         return $this->message;
     }
 
-    public function setMessage(string $message): AbstractFormattedApiResponse
+    public function setMessage(string $message): AbstractApiResponseContent
     {
         $this->message = $message;
         return $this;
@@ -46,16 +49,7 @@ abstract class AbstractFormattedApiResponse
         return $this->status;
     }
 
-    private function setStatus(): void
-    {
-        $status = Response::$statusTexts[$this->statusCode] ?? null;
-        if ($status == null)
-            throw new InvalidArgumentException(sprintf('Le code de status "%d" est invalide', $this->statusCode));
-
-        $this->status = $status;
-    }
-
-    public function toJson(): JsonResponse
+    public function createJsonResponse(): JsonResponse
     {
         return response()->json($this->toArray(), $this->statusCode);
     }

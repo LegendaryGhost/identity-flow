@@ -2,15 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Responses\ErrorResponse;
+use App\Http\Responses\SuccessResponse;
 use App\Models\Token;
 use App\Models\Utilisateur;
 use App\Models\UtilisateurTemporaire;
-use Illuminate\Http\JsonResponse;
+use App\Services\TokenService;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Str;
 
 class AuthController extends Controller
 {
+    private readonly TokenService $tokenService;
+
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
+
     public function inscription(Request $request)
     {
         $validatedData = $request->validate([
@@ -21,7 +31,7 @@ class AuthController extends Controller
             'mot_de_passe'   => ['required', 'string', 'min:6']
         ]);
 
-        $tokenVerification = Str::random(60);
+        $tokenVerification = $this->tokenService->generateToken();
         UtilisateurTemporaire::create([
             'email'              => $validatedData['email'],
             'nom'                => $validatedData['nom'],
@@ -33,44 +43,34 @@ class AuthController extends Controller
 
         // Envoi d'email
 
-        return response()->json([
-            'status_code' => 201,
-            'status'      => 'created',
-            'message'     => 'Un email de vérification vous a été envoyé'
-        ], 201);
+        return (new SuccessResponse(Response::HTTP_CREATED, 'Un email de vérification vous a été envoyé'))
+            ->toJson();
     }
 
     public function verificationEmail(string $tokenVerification)
     {
         $utilisateurTemporaire = UtilisateurTemporaire::where('token_verification', $tokenVerification)->first();
         if (!$utilisateurTemporaire)
-            return response()->json([
-                'status_code' => 404,
-                'status'      => 'not found',
-                'message'     => 'Token de vérification invalide'
-            ], 404);
+            return (new ErrorResponse(Response::HTTP_NOT_FOUND, 'Token de vérification invalide'))->toJson();
 
         $utilisateur = Utilisateur::create([
-            'email' => $utilisateurTemporaire->email,
-            'nom' => $utilisateurTemporaire->nom,
-            'prenom' => $utilisateurTemporaire->prenom,
+            'email'          => $utilisateurTemporaire->email,
+            'nom'            => $utilisateurTemporaire->nom,
+            'prenom'         => $utilisateurTemporaire->prenom,
             'date_naissance' => $utilisateurTemporaire->date_naissance,
-            'mot_de_passe' => $utilisateurTemporaire->mot_de_passe
+            'mot_de_passe'   => $utilisateurTemporaire->mot_de_passe
         ]);
         $utilisateurTemporaire->delete();
 
-        $valeurToken = Str::random(60);
+        $valeurToken = $this->tokenService->generateToken();
         $token = Token::create([
-            'valeur'         => hash('sha256', $valeurToken),
+            'valeur'         => $this->tokenService->hashToken($valeurToken),
             'utilisateur_id' => $utilisateur->id,
         ]);
 
-        return response()->json([
-            'status_code' => 200,
-            'status'      => 'success',
-            'message'     => 'Votre email a été vérifié. Votre compte a été créé avec succès',
-            'data'        => ['token' => $token]
-        ]);
+        return (new SuccessResponse((int) null,
+            'Votre email a été vérifié. Votre compte a été créé avec succès',
+            ['token' => $token]))->toJson();
     }
 
     public function connexion(Request $request)

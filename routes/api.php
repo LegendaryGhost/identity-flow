@@ -19,12 +19,20 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::controller(AuthController::class)->group(function () {
-    Route::post('/inscription', 'inscription');
-    Route::post('/connexion', 'connexion');
+
+
+Route::controller(AuthController::class)->prefix("/auth")->group(function () {
+
+    Route::middleware('ensure_json_api_requests')->group(function (){
+        Route::post('/inscription', 'inscription');
+
+        Route::post('/login',  'connexion');
+        Route::post('/verification-pin','verificationPin');
+    });
+
+
     Route::get('/verification-email/{tokenVerification}', 'verificationEmail');
+    Route::get('/reinitialisation-tentative','reinitialisationTentative');
 });
 
-Route::post('/auth/login', [\App\Http\Controllers\AuthController::class, 'login']);
-Route::post('/auth/verification-pin',[\App\Http\Controllers\AuthController::class,'verificationPin']);
-Route::get('/auth/reinitialisation-tentative',[\App\Http\Controllers\AuthController::class,'reinitialisationTentative']);
+

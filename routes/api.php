@@ -24,3 +24,4 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/connexion', 'connexion');
     Route::get('/verification-email/{tokenVerification}', 'verificationEmail');
 });
+Route::get('/email', [\App\Http\Controllers\TestEmail::class, 'sendEmail']);

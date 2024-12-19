@@ -13,8 +13,8 @@ class Utilisateur extends Model
         'email',
         'nom',
         'prenom',
-        'mot_de_passe',
-        'date_naissance'
+        'date_naissance',
+        'mot_de_passe'
     ];
 
     protected $hidden = ['mot_de_passe'];

@@ -16,14 +16,14 @@ return new class extends Migration
             $table->string('email', 75)->unique();
             $table->string('nom', 75);
             $table->string('prenom', 75);
-            $table->string('mot_de_passe', 255);
             $table->date('date_naissance');
+            $table->string('mot_de_passe', 255);
         });
 
         Schema::create('token', function (Blueprint $table) {
             $table->id();
             $table->string('valeur', 255)->unique();
-            $table->timestamp('date_heure_creation');
+            $table->timestamp('date_heure_creation')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('date_heure_expiration')->nullable();
             $table->unsignedBigInteger('id_utilisateur');
 

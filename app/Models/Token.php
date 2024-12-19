@@ -11,8 +11,6 @@ class Token extends Model
 
     protected $fillable = [
         'valeur',
-        'date_heure_creation',
-        'date_heure_expiration',
         'id_utilisateur',
     ];
 

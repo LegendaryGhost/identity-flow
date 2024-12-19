@@ -160,5 +160,6 @@ fabric.properties
 
 .idea
 package-lock.json
+composer.lock
 
 # End of https://www.toptal.com/developers/gitignore/api/laravel,phpstorm,visualstudiocode

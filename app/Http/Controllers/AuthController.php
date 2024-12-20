@@ -19,10 +19,53 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @OA\Info(
+ *     version="1.0.0",
+ *     title="API Documentation",
+ *     description="Documentation pour votre API"
+ * )
+ */
 class AuthController extends Controller
 {
     private const TEMPORARY_USER_KEY = 'temp_user_';
 
+    /**
+     * @OA\Post(
+     *     path="/api/auth/inscription",
+     *     summary="Inscription d'un utilisateur",
+     *     description="Permet à un utilisateur de s'inscrire en fournissant les informations nécessaires.",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "nom", "prenom", "date_naissance", "mot_de_passe"},
+     *             @OA\Property(property="email", type="string", format="email", example="sarobidyraza101@com"),
+     *             @OA\Property(property="nom", type="string", example="Dupont"),
+     *             @OA\Property(property="prenom", type="string", example="Jean"),
+     *             @OA\Property(property="date_naissance", type="string", format="date", example="1990-01-01"),
+     *             @OA\Property(property="mot_de_passe", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Inscription réussie, un email de vérification a été envoyé."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Données invalides."
+     *     ),
+     * @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * ),
+    * @OA\Response(
+     *         response=404,
+     *         description="Page non trouvée."
+     *     )
+     * ),
+     */
     public function inscription(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
@@ -51,6 +94,33 @@ class AuthController extends Controller
             ->createJsonResponse();
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/auth/verification-email/{tokenVerification}",
+     *     summary="Vérifie le token d'e-mail",
+     *     description="Valide l'inscription de l'utilisateur avec un token fourni par e-mail.",
+     *     tags={"Authentification"},
+     *     @OA\Parameter(
+     *         name="tokenVerification",
+     *         in="path",
+     *         required=true,
+     *         description="Token de vérification envoyé par e-mail",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Utilisateur vérifié avec succès."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Token de vérification invalide.",
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
     public function verificationEmail(string $tokenVerification): JsonResponse
     {
         $utilisateurTemporaire = Cache::pull(self::TEMPORARY_USER_KEY . $tokenVerification);
@@ -70,6 +140,34 @@ class AuthController extends Controller
             ->createJsonResponse();
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/auth/connexion",
+     *     summary="Connexion utilisateur",
+     *     description="Authentifie un utilisateur avec un e-mail et un mot de passe.",
+     *     tags={"Authentification"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "mot_de_passe"},
+     *             @OA\Property(property="email", type="string", format="email", example="sarobidyraza101@gmail.com"),
+     *             @OA\Property(property="mot_de_passe", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Code de validation envoyé à l'utilisateur."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Identifiants incorrects ou utilisateur non trouvé.",
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
     public function connexion(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
@@ -113,6 +211,38 @@ class AuthController extends Controller
             ->createJsonResponse();
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/auth/verification-pin",
+     *     summary="Vérifie le code PIN",
+     *     description="Valide l'utilisateur avec un code PIN envoyé par e-mail.",
+     *     tags={"Authentification"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "code_pin"},
+     *             @OA\Property(property="email", type="string", format="email", example="sarobidyraza101@gmail.com"),
+     *             @OA\Property(property="code_pin", type="string", example="123456")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Utilisateur authentifié avec succès."
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Code PIN invalide ou expiré.",
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Utilisateur ou code PIN non trouvé.",
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
     public function verificationPin(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
@@ -146,6 +276,38 @@ class AuthController extends Controller
 
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/auth/reinitialisation-tentative",
+     *     summary="Réinitialise les tentatives de connexion",
+     *     description="Réinitialise les tentatives de connexion après une vérification par e-mail.",
+     *     tags={"Authentification"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "token"},
+     *             @OA\Property(property="email", type="string", format="email", example="sarobidyraza101@gmail.com"),
+     *             @OA\Property(property="token", type="string", example="resetToken123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tentatives de connexion réinitialisées avec succès."
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Token invalide ou expiré."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Utilisateur non trouvé.",
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
     public function reinitialisationTentative(Request $request): JsonResponse
     {
         $email = $request->input('email');

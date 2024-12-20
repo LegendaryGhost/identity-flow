@@ -93,7 +93,6 @@ class UtilisateurController
             'nom'=>$utilisateur->nom,
             'prenom'=>$utilisateur->prenom,
             'date_naissance'=>$utilisateur->date_naissance,
-            'tentatives_connexion'=>$utilisateur->tentatives_connexion
         ]))->createJsonResponse();
 
     }

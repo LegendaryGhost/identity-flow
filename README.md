@@ -42,15 +42,21 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
     ```bash
     docker-compose down
     ```
-  
-## Notes
+
+## Bon à savoir 
+
+- Pour configurer la durée de vie des tokens, etc., aller dans le fichier [.env](.env) et naviguer vers la 6è ligne. 
+- **Attention** ⚠️ : Pour assurer l'envoi d'email, on vous prie de ``désactiver l'antivirus`` de votre système.
+
+---  
+
+## Livrables
 
 Les livrables sont situés dans le répertoire [livrable](livrable) à la racine du projet. Dedans, vous y verrez les fichiers suivants :
 - **mcd.loo** : Le modèle conceptuel de données.
 - **SCENARIO.md** : Un example de scénario d'utilisation.
 - **collection-postman.json** : La collection postman pour tester l'API.
-
-**Important** : `Pour assurer l'envoi d'email, il faut désactiver l'antivirus de votre système`.
+- **TODO.xlsx** : Notre liste des tâches.
 
 ## Dépendances
 

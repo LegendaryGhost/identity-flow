@@ -198,13 +198,13 @@
             }
         },
         "/api/auth/reinitialisation-tentative": {
-            "post": {
+            "get": {
                 "tags": [
                     "Authentification"
                 ],
                 "summary": "Réinitialise les tentatives de connexion",
                 "description": "Réinitialise les tentatives de connexion après une vérification par e-mail.",
-                "operationId": "654ad2a5e45e279cb169db83b673aa1c",
+                "operationId": "99dd80e108d90517e731b5e7f6693699",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -263,33 +263,30 @@
                                     "nom",
                                     "prenom",
                                     "date_naissance",
-                                    "mot_de_passe"
+                                    "password123"
                                 ],
                                 "properties": {
                                     "nom": {
-                                        "description": "Nom de l'utilisateur",
+                                        "description": "Dupont",
                                         "type": "string",
                                         "maxLength": 75,
                                         "example": "Dupont"
                                     },
                                     "prenom": {
-                                        "description": "Prénom de l'utilisateur",
+                                        "description": "Jean",
                                         "type": "string",
                                         "maxLength": 75,
                                         "example": "Jean"
                                     },
                                     "date_naissance": {
-                                        "description": "Date de naissance au format YYYY-MM-DD",
                                         "type": "string",
                                         "format": "date",
                                         "example": "1990-01-01"
                                     },
                                     "mot_de_passe": {
-                                        "description": "Nouveau mot de passe de l'utilisateur",
                                         "type": "string",
                                         "format": "password",
-                                        "minLength": 6,
-                                        "example": "securepassword"
+                                        "example": "password12"
                                     }
                                 },
                                 "type": "object"
@@ -359,6 +356,9 @@
                                 }
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
                     }
                 },
                 "security": [

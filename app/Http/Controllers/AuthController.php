@@ -305,7 +305,7 @@ class AuthController extends Controller
     }
 
     /**
-     * @OA\Post(
+     * @OA\Get(
      *     path="/api/auth/reinitialisation-tentative",
      *     summary="Réinitialise les tentatives de connexion",
      *     description="Réinitialise les tentatives de connexion après une vérification par e-mail.",

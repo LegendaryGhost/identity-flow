@@ -21,11 +21,11 @@ class UtilisateurController
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nom", "prenom", "date_naissance", "mot_de_passe"},
-     *             @OA\Property(property="nom", type="string", example="Dupont", maxLength=75, description="Nom de l'utilisateur"),
-     *             @OA\Property(property="prenom", type="string", example="Jean", maxLength=75, description="Prénom de l'utilisateur"),
-     *             @OA\Property(property="date_naissance", type="string", format="date", example="1990-01-01", description="Date de naissance au format YYYY-MM-DD"),
-     *             @OA\Property(property="mot_de_passe", type="string", format="password", example="securepassword", minLength=6, description="Nouveau mot de passe de l'utilisateur")
+     *             required={"nom", "prenom", "date_naissance", "password123"},
+     *             @OA\Property(property="nom", type="string", example="Dupont", maxLength=75, description="Dupont"),
+     *             @OA\Property(property="prenom", type="string", example="Jean", maxLength=75, description="Jean"),
+     *             @OA\Property(property="date_naissance", type="string", format="date", example="1990-01-01"),
+     *             @OA\Property(property="mot_de_passe", type="string", format="password", example="password12")
      *         )
      *     ),
      *     @OA\Response(
@@ -50,7 +50,12 @@ class UtilisateurController
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Non autorisé.")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur.",
      *     )
+     * 
      * )
      */
     public function modification(Request $request): JsonResponse

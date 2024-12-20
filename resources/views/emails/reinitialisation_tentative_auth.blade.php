@@ -32,7 +32,9 @@
         <div style="padding: 0 40px 40px;">
             <div style="background-color: #f8f9fa; border-radius: 6px; padding: 15px;">
                 <p style="margin: 0; line-height: 1.5; font-size: 14px; color: #6c757d;">
-                    <strong>ℹ️ Note :</strong> Après le déblocage, vous pourrez vous connecter normalement. Pour plus de sécurité, nous vous recommandons d'utiliser un mot de passe fort.
+
+                    <strong>ℹ️ Note :</strong>Le lien expire dans {{$delai}} secondes.
+                    Après le déblocage, vous pourrez vous connecter normalement. Pour plus de sécurité, nous vous recommandons d'utiliser un mot de passe fort.
                 </p>
             </div>
         </div>

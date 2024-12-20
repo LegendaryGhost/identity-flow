@@ -45,7 +45,7 @@
                             <tr>
                                 <td style="font-size: 14px; color: #6c757d;">
                                     <p style="margin: 0; line-height: 1.5;">
-                                        <strong>⚠️ Important :</strong> Si vous n'avez pas demandé cette
+                                        <strong>⚠️ Important :</strong>Le lien expire dans {{$delai}} secondes. Si vous n'avez pas demandé cette
                                         réinitialisation, ignorez simplement cet email.
                                     </p>
                                 </td>

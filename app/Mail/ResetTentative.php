@@ -9,6 +9,7 @@ class ResetTentative extends BaseEmail
         parent::__construct([
             'name' => $nameUser,
             'resetLink' => $resetLink,
+            'delai'=>env('DUREE_VIE_TENTATIVE', 86400)
         ]);
         $this->viewName = 'emails.reinitialisation_tentative_auth';
         $this->subjectLine = 'Réinitialisez votre tentative de connection';

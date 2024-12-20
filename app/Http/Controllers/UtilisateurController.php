@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Responses\SuccessResponseContent;
+use App\Models\Utilisateur;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -79,5 +80,21 @@ class UtilisateurController
 
         return (new SuccessResponseContent(Response::HTTP_OK, 'Vos informations ont été mis à jour.'))
             ->createJsonResponse();
+    }
+    public function utilisateurParId($id): SuccessResponseContent|JsonResponse
+    {
+        $utilisateur = Utilisateur::where("id",$id)->first();
+        if (!$utilisateur) {
+            return (new SuccessResponseContent(Response::HTTP_NOT_FOUND, 'utilisateur non trouvé'))
+                ->createJsonResponse();
+        }
+        return (new SuccessResponseContent(Response::HTTP_OK,'utilisateur data',[
+            'email'=>$utilisateur->email,
+            'nom'=>$utilisateur->nom,
+            'prenom'=>$utilisateur->prenom,
+            'date_naissance'=>$utilisateur->date_naissance,
+            'tentatives_connexion'=>$utilisateur->tentatives_connexion
+        ]))->createJsonResponse();
+
     }
 }

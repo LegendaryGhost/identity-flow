@@ -6,26 +6,388 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/example": {
-            "get": {
+        "/api/auth/inscription": {
+            "post": {
                 "tags": [
-                    "Example"
+                    "Auth"
                 ],
-                "summary": "Exemple de route",
-                "description": "Récupérer les données de l'exemple.",
-                "operationId": "2bea81dd24e5d9c2e49760b4310620e1",
+                "summary": "Inscription d'un utilisateur",
+                "description": "Permet à un utilisateur de s'inscrire en fournissant les informations nécessaires.",
+                "operationId": "9c7e2aae15ea50210784c5de0b2371dd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "nom",
+                                    "prenom",
+                                    "date_naissance",
+                                    "mot_de_passe"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sarobidyraza101@com"
+                                    },
+                                    "nom": {
+                                        "type": "string",
+                                        "example": "Dupont"
+                                    },
+                                    "prenom": {
+                                        "type": "string",
+                                        "example": "Jean"
+                                    },
+                                    "date_naissance": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1990-01-01"
+                                    },
+                                    "mot_de_passe": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "200": {
-                        "description": "Réponse réussie"
+                    "201": {
+                        "description": "Inscription réussie, un email de vérification a été envoyé."
+                    },
+                    "422": {
+                        "description": "Données invalides."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
                     }
                 }
+            }
+        },
+        "/api/auth/verification-email/{tokenVerification}": {
+            "get": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Vérifie le token d'e-mail",
+                "description": "Valide l'inscription de l'utilisateur avec un token fourni par e-mail.",
+                "operationId": "49f702fca1fef5340c47a2ae6be64cc0",
+                "parameters": [
+                    {
+                        "name": "tokenVerification",
+                        "in": "path",
+                        "description": "Token de vérification envoyé par e-mail",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur vérifié avec succès."
+                    },
+                    "404": {
+                        "description": "Token de vérification invalide."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                }
+            }
+        },
+        "/api/auth/connexion": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Connexion utilisateur",
+                "description": "Authentifie un utilisateur avec un e-mail et un mot de passe.",
+                "operationId": "17bc7bde644fefecea4f2fa5efb3d7b7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "mot_de_passe"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sarobidyraza101@gmail.com"
+                                    },
+                                    "mot_de_passe": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code de validation envoyé à l'utilisateur."
+                    },
+                    "404": {
+                        "description": "Identifiants incorrects ou utilisateur non trouvé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                }
+            }
+        },
+        "/api/auth/verification-pin": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Vérifie le code PIN",
+                "description": "Valide l'utilisateur avec un code PIN envoyé par e-mail.",
+                "operationId": "de10f16789c56a5e0ad4218fc9602458",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "code_pin"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sarobidyraza101@gmail.com"
+                                    },
+                                    "code_pin": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur authentifié avec succès."
+                    },
+                    "401": {
+                        "description": "Code PIN invalide ou expiré."
+                    },
+                    "404": {
+                        "description": "Utilisateur ou code PIN non trouvé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                }
+            }
+        },
+        "/api/auth/reinitialisation-tentative": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Réinitialise les tentatives de connexion",
+                "description": "Réinitialise les tentatives de connexion après une vérification par e-mail.",
+                "operationId": "654ad2a5e45e279cb169db83b673aa1c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "token"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sarobidyraza101@gmail.com"
+                                    },
+                                    "token": {
+                                        "type": "string",
+                                        "example": "resetToken123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tentatives de connexion réinitialisées avec succès."
+                    },
+                    "400": {
+                        "description": "Token invalide ou expiré."
+                    },
+                    "404": {
+                        "description": "Utilisateur non trouvé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                }
+            }
+        },
+        "/utilisateur/modification": {
+            "put": {
+                "tags": [
+                    "Utilisateur"
+                ],
+                "summary": "Modifier les informations d'un utilisateur",
+                "description": "Cette méthode permet de modifier les informations personnelles d'un utilisateur, y compris son nom, prénom, date de naissance et mot de passe.",
+                "operationId": "6a4449867668a23cb41d29b13df34fff",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom",
+                                    "prenom",
+                                    "date_naissance",
+                                    "mot_de_passe"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "description": "Nom de l'utilisateur",
+                                        "type": "string",
+                                        "maxLength": 75,
+                                        "example": "Dupont"
+                                    },
+                                    "prenom": {
+                                        "description": "Prénom de l'utilisateur",
+                                        "type": "string",
+                                        "maxLength": 75,
+                                        "example": "Jean"
+                                    },
+                                    "date_naissance": {
+                                        "description": "Date de naissance au format YYYY-MM-DD",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1990-01-01"
+                                    },
+                                    "mot_de_passe": {
+                                        "description": "Nouveau mot de passe de l'utilisateur",
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 6,
+                                        "example": "securepassword"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vos informations ont été mis à jour."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation des données échouée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Les données envoyées ne sont pas valides."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "property": null
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non autorisé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "404": {
+                "description": "Page non trouvée."
             }
         }
     },
     "tags": [
         {
-            "name": "Example",
-            "description": "Example"
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Authentification",
+            "description": "Authentification"
+        },
+        {
+            "name": "Utilisateur",
+            "description": "Utilisateur"
         }
     ]
 }

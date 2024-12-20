@@ -39,4 +39,4 @@ Route::put('/utilisateurs', [UtilisateurController::class, 'modification'])
     ->middleware('ensure_json_api_requests')
     ->middleware('verify_bearer_token');
 
-Route::get('/utilisateurs/{id}', [UtilisateurController::class, 'utilisateurParId']);
+Route::get('/utilisateurs/{email}', [UtilisateurController::class, 'utilisateurParId']);

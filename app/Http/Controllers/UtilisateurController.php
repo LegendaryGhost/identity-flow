@@ -81,9 +81,9 @@ class UtilisateurController
         return (new SuccessResponseContent(Response::HTTP_OK, 'Vos informations ont été mis à jour.'))
             ->createJsonResponse();
     }
-    public function utilisateurParId($id): SuccessResponseContent|JsonResponse
+    public function utilisateurParEmail($email): SuccessResponseContent|JsonResponse
     {
-        $utilisateur = Utilisateur::where("id",$id)->first();
+        $utilisateur = Utilisateur::where("email",$email)->first();
         if (!$utilisateur) {
             return (new SuccessResponseContent(Response::HTTP_NOT_FOUND, 'utilisateur non trouvé'))
                 ->createJsonResponse();

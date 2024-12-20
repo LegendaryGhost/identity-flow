@@ -369,7 +369,6 @@ class AuthController extends Controller
     public function deconnexion($token): JsonResponse|ErrorResponseContent
     {
         $tokenModel = Token::where("valeur",$token)->first();
-
         if (!$tokenModel ){
             return (new ErrorResponseContent(Response::HTTP_ACCEPTED,"vous etes deconnecter"));
         }

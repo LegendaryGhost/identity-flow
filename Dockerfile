@@ -22,8 +22,6 @@ RUN git config --global --add safe.directory /var/www/html
 # Installer les dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
-
-
 # # Installer Swagger
 # RUN composer require darkaonline/l5-swagger \
 #     && php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider"

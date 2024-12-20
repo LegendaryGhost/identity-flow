@@ -48,7 +48,7 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
 Les livrables sont situés dans le répertoire [livrable](livrable) à la racine du projet. Dedans, vous y verrez les fichiers suivants :
 - **mcd.loo** : Le modèle conceptuel de données.
 - **SCENARIO.md** : Un example de scénario d'utilisation.
-- **collection_postman.json** : La collection postman pour tester l'API.
+- **collection-postman.json** : La collection postman pour tester l'API.
 
 **Important** : `Pour assurer l'envoi d'email, il faut désactiver l'antivirus de votre système`.
 

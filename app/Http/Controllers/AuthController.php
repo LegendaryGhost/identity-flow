@@ -140,6 +140,18 @@ class AuthController extends Controller
             ->createJsonResponse();
     }
 
+    private function envoyerMailReinitialisation(Utilisateur $utilisateur) {
+        $dureeVieTentative = Cache::get('duree_vie_tentative');
+        // cree un token de reinitialisation
+        $token_tentative = Utils::generateToken();
+        Cache::put("reinitialisation_tentative_{$utilisateur->email}", $token_tentative, Carbon::now()->addSeconds($dureeVieTentative));
+        $restLink = url("http://127.0.0.1:8000/api/auth/reinitialisation-tentative?email={$utilisateur->email}&token={$token_tentative}");
+        Mail::to($utilisateur->email)->send(new ResetTentative($utilisateur->nom, $restLink));
+        return (new ErrorResponseContent(Response::HTTP_LOCKED,
+            'Votre compte est verrouillé. Vérifiez vos e-mails pour le déverrouiller.'))
+            ->createJsonResponse();
+    }
+
     /**
      * @OA\Post(
      *     path="/api/auth/connexion",
@@ -176,20 +188,18 @@ class AuthController extends Controller
         ]);
         $utilisateur = Utilisateur::where('email', $validatedData['email'])->first();
 
-        $nombreTentative = Cache::get('nombre_tentative');
-        if ($utilisateur->tentatives_connexion == $nombreTentative) {
-            $dureeVieTentative = Cache::get('duree_vie_tentative');
-            // cree un token de reinitialisation
-            $token_tentative = Utils::generateToken();
-            Cache::put("reinitialisation_tentative_{$utilisateur->email}", $token_tentative, Carbon::now()->addSeconds($dureeVieTentative));
-            $restLink = url("http://127.0.0.1:8000/api/auth/reinitialisation-tentative?email={$utilisateur->email}&token={$token_tentative}");
-            Mail::to($utilisateur->email)->send(new ResetTentative($utilisateur->nom, $restLink));
-            return (new ErrorResponseContent(Response::HTTP_LOCKED,
-                'Votre compte est verrouillé. Vérifiez vos e-mails pour le déverrouiller.'))
+        if (!$utilisateur) {
+            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND,
+                'Ces informations d\'identification ne correspondent pas à nos enregistrements.'))
                 ->createJsonResponse();
         }
 
-        if (!$utilisateur || !Hash::check($validatedData['mot_de_passe'], $utilisateur->mot_de_passe)) {
+        $nombreTentative = Cache::get('nombre_tentative');
+        if ($utilisateur->tentatives_connexion == $nombreTentative) {
+            return $this->envoyerMailReinitialisation($utilisateur);
+        }
+
+        if (!Hash::check($validatedData['mot_de_passe'], $utilisateur->mot_de_passe)) {
             $utilisateur->tentatives_connexion++;
             $utilisateur->save();
 
@@ -255,11 +265,29 @@ class AuthController extends Controller
             ->first();
         $expiration = Carbon::parse($codePin->date_heure_expiration);
 
-        if (!$utilisateur || $codePin->valeur !== $validatedData['code_pin'] || $expiration->isBefore(Carbon::now())) {
-            return (new ErrorResponseContent(Response::HTTP_UNAUTHORIZED, 'Code Pin de vérification invalide ou expiré'))
+        if (!$utilisateur) {
+            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, "L'email n'est associé à aucun utilisateur."))
                 ->createJsonResponse();
         }
-        // cree un token de reinitialisation
+
+        $nombreTentative = Cache::get('nombre_tentative');
+        if ($utilisateur->tentatives_connexion == $nombreTentative) {
+            return $this->envoyerMailReinitialisation($utilisateur);
+        }
+
+        if ($codePin->valeur !== $validatedData['code_pin']) {
+            $utilisateur->tentatives_connexion++;
+            $utilisateur->save();
+
+            return (new ErrorResponseContent(Response::HTTP_UNAUTHORIZED, 'Code Pin de vérification invalide'))
+                ->createJsonResponse();
+        }
+
+        if ($expiration->isBefore(Carbon::now())) {
+            return (new ErrorResponseContent(Response::HTTP_UNAUTHORIZED, 'Code Pin de vérification expiré'))
+                ->createJsonResponse();
+        }
+
         $token = Utils::generateToken();
 
         $dureeVieToken = Cache::get('duree_vie_token');

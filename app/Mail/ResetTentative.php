@@ -11,6 +11,6 @@ class ResetTentative extends BaseEmail
             'resetLink' => $resetLink,
         ]);
         $this->viewName = 'emails.reinitialisation_tentative_auth';
-        $this->subjectLine = 'Réinitialisez votre tentatvie de connection';
+        $this->subjectLine = 'Réinitialisez votre tentative de connection';
     }
 }

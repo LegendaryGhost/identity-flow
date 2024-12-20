@@ -44,10 +44,13 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
     ```
   
 ## Notes
+
 Les livrables sont situés dans le répertoire [livrable](livrable) à la racine du projet. Dedans, vous y verrez les fichiers suivants :
 - **mcd.loo** : Le modèle conceptuel de données.
 - **SCENARIO.md** : Un example de scénario d'utilisation.
 - **collection_postman.json** : La collection postman pour tester l'API.
+
+**Important** : `Pour assurer l'envoi d'email, il faut désactiver l'antivirus de votre système`.
 
 ## Dépendances
 
@@ -56,7 +59,3 @@ Les livrables sont situés dans le répertoire [livrable](livrable) à la racine
 - PostgreSQL 15
 - Composer
 - Docker
-
----
-
-Ce guide fournit les étapes essentielles pour configurer et exécuter votre projet identity-flow. N'hésitez pas à consulter la documentation officielle de chaque outil pour des informations plus détaillées.

@@ -6,6 +6,7 @@ use App\Http\Responses\SuccessResponseContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response;
 
 class UtilisateurController
@@ -13,7 +14,7 @@ class UtilisateurController
 
     /**
      * @OA\Put(
-     *     path="/utilisateur/modification",
+     *     path="/utilisateurs",
      *     summary="Modifier les informations d'un utilisateur",
      *     description="Cette méthode permet de modifier les informations personnelles d'un utilisateur, y compris son nom, prénom, date de naissance et mot de passe.",
      *     tags={"Utilisateur"},
@@ -55,29 +56,28 @@ class UtilisateurController
      *         response=500,
      *         description="Erreur interne du serveur.",
      *     )
-     * 
+     *
      * )
      */
     public function modification(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
-            'nom'            => ['required', 'string', 'max:75'],
-            'prenom'         => ['required', 'string', 'max:75'],
-            'date_naissance' => ['required', 'date'],
-            'mot_de_passe'   => ['required', 'string', 'min:6']
+            'nom'            => ['string', 'max:75'],
+            'prenom'         => ['string', 'max:75'],
+            'date_naissance' => ['date'],
+            'mot_de_passe'   => ['string', 'min:6']
         ]);
 
         $utilisateur = $request->get('utilisateur');
 
-        $utilisateur->nom = $validatedData['nom'];
-        $utilisateur->prenom = $validatedData['prenom'];
-        $utilisateur->date_naissance = $validatedData['date_naissance'];
-        $utilisateur->mot_de_passe = Hash::make($validatedData['mot_de_passe']);
+        $utilisateur->nom = $validatedData['nom'] ?? $utilisateur->nom;
+        $utilisateur->prenom = $validatedData['prenom'] ?? $utilisateur->prenom;
+        $utilisateur->date_naissance = $validatedData['date_naissance'] ?? $utilisateur->date_naissance;
+        $utilisateur->mot_de_passe = $validatedData['mot_de_passe'] ? Hash::make($validatedData['mot_de_passe']) : $utilisateur->mot_de_passe;
 
         $utilisateur->save();
 
         return (new SuccessResponseContent(Response::HTTP_OK, 'Vos informations ont été mis à jour.'))
             ->createJsonResponse();
     }
-
 }

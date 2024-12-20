@@ -161,5 +161,6 @@ fabric.properties
 .idea
 package-lock.json
 composer.lock
+livrable/mcd.lo1
 
 # End of https://www.toptal.com/developers/gitignore/api/laravel,phpstorm,visualstudiocode

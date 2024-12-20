@@ -9,7 +9,7 @@
         "/api/auth/inscription": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Inscription"
                 ],
                 "summary": "Inscription d'un utilisateur",
                 "description": "Permet à un utilisateur de s'inscrire en fournissant les informations nécessaires.",
@@ -378,8 +378,8 @@
     },
     "tags": [
         {
-            "name": "Auth",
-            "description": "Auth"
+            "name": "Inscription",
+            "description": "Inscription"
         },
         {
             "name": "Authentification",

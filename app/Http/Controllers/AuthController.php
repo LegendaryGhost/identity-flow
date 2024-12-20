@@ -35,7 +35,7 @@ class AuthController extends Controller
      *     path="/api/auth/inscription",
      *     summary="Inscription d'un utilisateur",
      *     description="Permet à un utilisateur de s'inscrire en fournissant les informations nécessaires.",
-     *     tags={"Auth"},
+     *     tags={"Inscription"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(

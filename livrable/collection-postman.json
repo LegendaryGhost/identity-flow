@@ -1,0 +1,205 @@
+{
+	"info": {
+		"_postman_id": "37354b6f-09c7-4f42-ae9e-23ccb0090f77",
+		"name": "Identity flow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26562365"
+	},
+	"item": [
+		{
+			"name": "Connexion",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\":\"your-email@gmail.com\",\r\n    \"mot_de_passe\":\"123456\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/auth/connexion",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"auth",
+						"connexion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Verif code Pin login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\":\"your-email@gmail.com\",\r\n    \"code_pin\":\"606746\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/auth/verification-pin",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"auth",
+						"verification-pin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inscritpion",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"votre-email@gmail.com\",\r\n    \"nom\":\"Doe\",\r\n    \"prenom\":\"John\",\r\n    \"mot_de_passe\":\"123456\",\r\n    \"date_naissance\":\"2001-03-01\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/auth/inscription",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"auth",
+						"inscription"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validation mail inscription",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BaseUrl}}/auth/verification-email/{$token}",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"auth",
+						"verification-email",
+						"{$token}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reinitialisation tentative par mail",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"your-email@gmail.com\",\r\n    \"token\": \"resetToken123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/auth/reinitialisation-tentative",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"auth",
+						"reinitialisation-tentative"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Modification info utilisateur",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "89f33a0e2bea5f76ce8fefc60006f652346b1c482d4ad495a0d2bce0f461f214",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"rihantiana000@gmail.com\",\r\n    \"nom\":\"Mbolatsiory\",\r\n    \"prenom\":\"Doe\",\r\n    \"mot_de_passe\":\"123456\",\r\n    \"date_naissance\":\"2001-03-01\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/utilisateurs",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"utilisateurs"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BaseUrl",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -61,7 +61,7 @@ class AuthController extends Controller
      *         description="Erreur interne du serveur."
      *     )
      * ),
-    * @OA\Response(
+     * @OA\Response(
      *         response=404,
      *         description="Page non trouvée."
      *     )

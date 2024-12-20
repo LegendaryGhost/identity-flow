@@ -30,7 +30,7 @@
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "sarobidyraza101@com"
+                                        "example": "sarobidyraza101@gmail.com"
                                     },
                                     "nom": {
                                         "type": "string",
@@ -72,7 +72,7 @@
         "/api/auth/verification-email/{tokenVerification}": {
             "get": {
                 "tags": [
-                    "Authentification"
+                    "Inscription"
                 ],
                 "summary": "Vérifie le token d'e-mail",
                 "description": "Valide l'inscription de l'utilisateur avec un token fourni par e-mail.",

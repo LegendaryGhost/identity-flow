@@ -40,7 +40,7 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"email", "nom", "prenom", "date_naissance", "mot_de_passe"},
-     *             @OA\Property(property="email", type="string", format="email", example="sarobidyraza101@com"),
+     *             @OA\Property(property="email", type="string", format="email", example="sarobidyraza101@gmail.com"),
      *             @OA\Property(property="nom", type="string", example="Dupont"),
      *             @OA\Property(property="prenom", type="string", example="Jean"),
      *             @OA\Property(property="date_naissance", type="string", format="date", example="1990-01-01"),
@@ -99,7 +99,7 @@ class AuthController extends Controller
      *     path="/api/auth/verification-email/{tokenVerification}",
      *     summary="Vérifie le token d'e-mail",
      *     description="Valide l'inscription de l'utilisateur avec un token fourni par e-mail.",
-     *     tags={"Authentification"},
+     *     tags={"Inscription"},
      *     @OA\Parameter(
      *         name="tokenVerification",
      *         in="path",

@@ -9,6 +9,7 @@ class ValidationInscription extends BaseEmail
         parent::__construct([
             'name' => $nameUser,
             'validationLink' => $validationLink,
+            'delai'=>120
         ]);
         $this->viewName = 'emails.validation_inscription';
         $this->subjectLine = 'Validez votre inscription';

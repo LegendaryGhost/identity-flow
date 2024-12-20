@@ -56,7 +56,7 @@
                 <tr>
                     <td style="padding: 0 40px 40px; text-align: center;">
                         <p style="margin: 0; font-size: 14px; color: #6c757d;">
-                            Le lien expire dans 24 heures. Si vous rencontrez des problèmes,
+                            Le lien expire dans {{$delai}} secondes. Si vous rencontrez des problèmes,
                             <a href="https://github.com/LegendaryGhost/identity-flow"
                                style="color: #27ae60; text-decoration: none;">contactez
                                 le support</a>

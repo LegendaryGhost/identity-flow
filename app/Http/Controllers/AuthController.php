@@ -261,15 +261,17 @@ class AuthController extends Controller
             'code_pin' => ['required', 'string'],
         ]);
         $utilisateur = Utilisateur::where('email', $validatedData['email'])->first();
+        if (!$utilisateur) {
+            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, "L'email n'est associé à aucun utilisateur."))
+                ->createJsonResponse();
+        }
+
         $codePin = CodePin::where('id_utilisateur', $utilisateur->id)
             ->orderBy('date_heure_expiration', 'desc')
             ->first();
         $expiration = Carbon::parse($codePin->date_heure_expiration);
 
-        if (!$utilisateur) {
-            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, "L'email n'est associé à aucun utilisateur."))
-                ->createJsonResponse();
-        }
+
 
         $nombreTentative = Cache::get('nombre_tentative');
         if ($utilisateur->tentatives_connexion == $nombreTentative) {

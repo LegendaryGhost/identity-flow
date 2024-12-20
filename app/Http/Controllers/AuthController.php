@@ -78,13 +78,14 @@ class AuthController extends Controller
         ]);
 
         $tokenVerification = Utils::generateToken();
+        $dureeInscritpion = Cache::get("duree_vie_inscription");
         Cache::put(self::TEMPORARY_USER_KEY . $tokenVerification, [
             'email' => $validatedData['email'],
             'nom' => $validatedData['nom'],
             'prenom' => $validatedData['prenom'],
             'date_naissance' => $validatedData['date_naissance'],
             'mot_de_passe' => Hash::make($validatedData['mot_de_passe'])
-        ], 120);
+        ], $dureeInscritpion);
 
         Mail::to($validatedData['email'])->send(
             new ValidationInscription($validatedData['nom'],

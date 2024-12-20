@@ -369,8 +369,12 @@ class AuthController extends Controller
     public function deconnexion($token): JsonResponse|ErrorResponseContent
     {
         $tokenModel = Token::where("valeur",$token)->first();
+
+        if (!$tokenModel ){
+            return (new ErrorResponseContent(Response::HTTP_ACCEPTED,"vous etes deconnecter"));
+        }
         $carbonExpirationToken = Carbon::parse($tokenModel->date_heure_expiration);
-        if (!$tokenModel || $carbonExpirationToken->isBefore(Carbon::now())){
+        if ($carbonExpirationToken->isBefore(Carbon::now())){
             return (new ErrorResponseContent(Response::HTTP_ACCEPTED,"vous etes deconnecter"));
         }
         $tokenModel->date_heure_expiration = Carbon::now();

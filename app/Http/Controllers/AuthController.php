@@ -303,6 +303,9 @@ class AuthController extends Controller
             "id_utilisateur" => $utilisateur->id
         ];
         Token::create($tokenData);
+        $utilisateur->tentatives_connexion=0;
+        $utilisateur->save();
+
         return (new SuccessResponseContent(Response::HTTP_OK, 'Utilisateur authentifié avec succès', ["token" => $token]))
             ->createJsonResponse();
 

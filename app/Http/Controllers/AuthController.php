@@ -265,7 +265,7 @@ class AuthController extends Controller
             return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, "L'email n'est associé à aucun utilisateur."))
                 ->createJsonResponse();
         }
-        
+
         $codePin = CodePin::where('id_utilisateur', $utilisateur->id)
             ->orderBy('date_heure_expiration', 'desc')
             ->first();

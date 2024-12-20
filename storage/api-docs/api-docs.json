@@ -198,13 +198,13 @@
             }
         },
         "/api/auth/reinitialisation-tentative": {
-            "post": {
+            "get": {
                 "tags": [
                     "Authentification"
                 ],
                 "summary": "Réinitialise les tentatives de connexion",
                 "description": "Réinitialise les tentatives de connexion après une vérification par e-mail.",
-                "operationId": "654ad2a5e45e279cb169db83b673aa1c",
+                "operationId": "99dd80e108d90517e731b5e7f6693699",
                 "requestBody": {
                     "required": true,
                     "content": {

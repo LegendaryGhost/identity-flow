@@ -365,4 +365,16 @@ class AuthController extends Controller
         return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, 'Utilisateur non trouvé'))
             ->createJsonResponse();
     }
+
+    public function deconnexion($token): JsonResponse|ErrorResponseContent
+    {
+        $tokenModel = Token::where("valeur",$token)->first();
+        if (!$tokenModel){
+            return (new ErrorResponseContent(Response::HTTP_ACCEPTED,"vous etes deconnecter"));
+        }
+        $tokenModel->date_heure_expiration = Carbon::now();
+        $tokenModel->save();
+        return (new SuccessResponseContent(Response::HTTP_OK,"vous etes deconnecter"))
+            ->createJsonResponse();
+    }
 }

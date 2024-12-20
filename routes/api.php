@@ -31,6 +31,7 @@ Route::controller(AuthController::class)
         });
 
         Route::get('/verification-email/{tokenVerification}', 'verificationEmail');
+        Route::post('/deconnexion/{token}', 'deconnexion');
         Route::get('/reinitialisation-tentative', 'reinitialisationTentative');
     });
 

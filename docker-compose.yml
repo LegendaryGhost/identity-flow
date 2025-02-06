@@ -19,11 +19,18 @@ services:
         image: postgres:15-alpine
         ports:
             - "5433:5432"
-        env_file:
-            - .env
+        environment:
+            POSTGRES_DB: identity_flow
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - identity_flow_postgres_data:/var/lib/postgresql/data
+        healthcheck:
+                test: [ "CMD", "pg_isready", "-d", "postgres", "-U", "postgres", "-p", "postgres" ]
+                timeout: 5s
+                retries: 5
+                start_period: 60s
         restart: unless-stopped
 
 volumes:
-    postgres_data: {}
+    identity_flow_postgres_data: {}

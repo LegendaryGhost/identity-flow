@@ -35,11 +35,14 @@ Route::controller(AuthController::class)
         Route::get('/reinitialisation-tentative', 'reinitialisationTentative');
     });
 
-Route::put('/utilisateurs', [UtilisateurController::class, 'modification'])
-    ->middleware('ensure_json_api_requests')
-    ->middleware('verify_bearer_token');
+Route::controller(UtilisateurController::class)
+    ->prefix('/utilisateurs')
+    ->middleware('verify_bearer_token')
+    ->group(function () {
+        Route::put('/', 'modification')
+            ->middleware('ensure_json_api_requests');
 
-Route::get('/utilisateurs/informations', [UtilisateurController::class, 'informations'])
-    ->middleware('verify_bearer_token');
+        Route::get('/informations', 'informations');
+    });
 
 Route::get('/utilisateurs/{email}', [UtilisateurController::class, 'utilisateurParEmail']);

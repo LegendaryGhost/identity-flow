@@ -1,6 +1,12 @@
+networks:
+    shared_network:
+        external: true
+
 services:
-    laravel_app:
+    laravel_identity_flow:
         container_name: laravel_identity_flow
+        networks:
+            - shared_network
         build:
             context: .
             dockerfile: Dockerfile
@@ -16,6 +22,8 @@ services:
 
     postgres_identity_flow:
         container_name: postgres_identity_flow
+        networks:
+            - shared_network
         image: postgres:15-alpine
         ports:
             - "5433:5432"

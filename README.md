@@ -14,7 +14,13 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
 
 ## Démarrage de l'application
 
-1. **Construire et démarrer les services Docker**
+1. **Créer un réseau docker partagé**
+
+    ```shell
+    docker network create shared_network
+    ```
+
+2. **Construire et démarrer les services Docker**
 
    Utilisez Docker Compose :
     ```bash
@@ -22,11 +28,11 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
     ```
    Cette commande construira l'image Docker et démarrera les conteneurs pour l'application Laravel et la base de données PostgreSQL.
 
-2. **Accéder à l'application Laravel**
+3. **Accéder à l'application Laravel**
 
    Une fois les services démarrés, l'application sera accessible à l'adresse suivante : http://localhost:8000.
 
-3. **Tester l'API avec Postman**
+4. **Tester l'API avec Postman**
 
    Pour tester l'API, ajoutez un Bearer Token dans l'onglet "Authorization" de Postman.
     - **Type** : Bearer Token

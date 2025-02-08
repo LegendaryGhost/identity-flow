@@ -20,7 +20,7 @@ class Utilisateur extends Model
         'tentatives_connexion'
     ];
 
-    protected $hidden = ['mot_de_passe'];
+    protected $hidden = ['mot_de_passe', 'tentatives_connexion'];
 
     public function tokens(): HasMany
     {

@@ -7,11 +7,19 @@ use App\Models\Utilisateur;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response;
 
 class UtilisateurController
 {
+
+    public function informations(Request $request): JsonResponse
+    {
+        $utilisateur = $request->get('utilisateur');
+
+        return (new SuccessResponseContent(Response::HTTP_OK, 'Voici vos informations'))
+            ->setData(["utilisateur" => $utilisateur])
+            ->createJsonResponse();
+    }
 
     /**
      * @OA\Put(

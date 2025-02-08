@@ -132,24 +132,21 @@ class AuthController extends Controller
                 ->createJsonResponse();
         }
 
+        // Création de l'utilisateur Firebase
         $url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" . Cache::get('firebase_key');
 
-        // Préparation des données
         $donnees = [
             'email' => $utilisateurTemporaire['email'],
             'password' => $utilisateurTemporaire['mot_de_passe'],
             'returnSecureToken' => true
         ];
 
-        // En-tête pour spécifier le format JSON
         $headers = [
             'Content-Type: application/json',
         ];
 
-        // Conversion des données en JSON
         $jsonDonnees = json_encode($donnees);
 
-        // Configuration de la requête
         $options = [
             'http' => [
                 'method' => 'POST',
@@ -159,16 +156,68 @@ class AuthController extends Controller
             ]
         ];
 
-        // Envoi de la requête
         $context = stream_context_create($options);
         $response = file_get_contents($url, false, $context);
 
-        // Vérification de la réponse
         $statusCode = http_response_code();
         $reponseFirebase = json_decode($response, true);
 
         if ($statusCode !== 200) {
-            throw new \Exception("Erreur Firebase: " . ($reponseFirebase['error']['message'] ?? 'Erreur inconnue'));
+            return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firebase: " . ($reponseFirebase['error']['message'] ?? 'Erreur inconnue')))
+                ->createJsonResponse();
+        }
+
+        // Création du document Firestore
+        $firestoreUrl = "https://firestore.googleapis.com/v1/projects/" . Cache::get('firebase_app_id') . "/databases/(default)/documents/profil";
+        $firestoreHeaders = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $reponseFirebase['idToken']
+        ];
+
+        $profilData = [
+            'fields' => [
+                'dateNaissance' => [
+                    'stringValue' => Carbon::parse($utilisateurTemporaire['date_naissance'])
+                        ->format('Y-m-d\TH:i:s.v\Z')
+                ],
+                'fondActuel' => [
+                    'integerValue' => '0'
+                ],
+                'nom' => [
+                    'stringValue' => $utilisateurTemporaire['nom']
+                ],
+                'prenom' => [
+                    'stringValue' => $utilisateurTemporaire['prenom']
+                ],
+                'pdp' => [
+                    'stringValue' => ''
+                ],
+                'pushToken' => [
+                    'stringValue' => ''
+                ],
+                'uid' => [
+                    'stringValue' => $reponseFirebase['localId']
+                ]
+            ]
+        ];
+
+        $firestoreOptions = [
+            'http' => [
+                'method' => 'POST',
+                'content' => json_encode($profilData),
+                'header' => $firestoreHeaders,
+                'ignore_errors' => true
+            ]
+        ];
+
+        $firestoreContext = stream_context_create($firestoreOptions);
+        $firestoreResponse = file_get_contents($firestoreUrl, false, $firestoreContext);
+        $firestoreStatusCode = http_response_code();
+        $firestoreReponse = json_decode($firestoreResponse, true);
+
+        if ($firestoreStatusCode !== 200) {
+            return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firestore: " . ($firestoreReponse['error']['message'] ?? 'Erreur inconnue')))
+                ->createJsonResponse();
         }
 
         // Création de l'utilisateur dans Laravel
@@ -181,7 +230,7 @@ class AuthController extends Controller
             'firebase_uid' => $reponseFirebase['localId']
         ]);
 
-        return (new SuccessResponseContent((int)null, 'Votre email a été vérifié. Votre compte a été créé avec succès'))
+        return (new SuccessResponseContent(Response::HTTP_CREATED, 'Votre email a été vérifié. Votre compte a été créé avec succès'))
             ->createJsonResponse();
     }
 

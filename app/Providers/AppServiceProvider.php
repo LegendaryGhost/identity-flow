@@ -43,5 +43,9 @@ class AppServiceProvider extends ServiceProvider
         if (!Cache::has('FIREBASE_KEY')) {
             Cache::forever('firebase_key', env('FIREBASE_KEY', ''));
         }
+
+        if (!Cache::has('FIREBASE_APP_ID')) {
+            Cache::forever('firebase_app_id', env('FIREBASE_APP_ID', ''));
+        }
     }
 }

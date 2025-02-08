@@ -31,14 +31,24 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
 3. **Accéder à l'application Laravel**
 
    Une fois les services démarrés, l'application sera accessible à l'adresse suivante : http://localhost:8000.
+   
+4. **Accéder à la documentation Swagger**
 
-4. **Tester l'API avec Postman**
+    http://localhost:8000/api/documentation
+
+5. **Tester l'API avec Postman**
 
    Pour tester l'API, ajoutez un Bearer Token dans l'onglet "Authorization" de Postman.
     - **Type** : Bearer Token
     - **Token** : `<votre_token>` (assurez-vous d'utiliser un token valide)
 
 ## Commandes Utiles
+
+- Pour régénérer la documentation Swagger :
+    ```shell
+    php artisan l5-swagger:generate
+    ```
+
 
 - Pour démarrer l'application en arrière-plan :
     ```bash

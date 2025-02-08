@@ -246,14 +246,101 @@
                 }
             }
         },
-        "/utilisateur/modification": {
+        "/utilisateurs/informations": {
+            "get": {
+                "tags": [
+                    "Utilisateur"
+                ],
+                "summary": "Récupérer mes informations à partir du token",
+                "description": "Cette méthode permet de récupérer les informations d'un utilisateur connecté excepté son mot de passe.",
+                "operationId": "061ab09b6ea43af036ca4492737b25a3",
+                "responses": {
+                    "200": {
+                        "description": "Succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Voici vos informations"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "utilisateur": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 12
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "jean.dupon@gmail.com"
+                                                        },
+                                                        "nom": {
+                                                            "type": "string",
+                                                            "example": "Dupon"
+                                                        },
+                                                        "prenom": {
+                                                            "type": "string",
+                                                            "example": "Jean"
+                                                        },
+                                                        "date_naissance": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "1981-02-17"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non autorisé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/utilisateurs": {
             "put": {
                 "tags": [
                     "Utilisateur"
                 ],
                 "summary": "Modifier les informations d'un utilisateur",
                 "description": "Cette méthode permet de modifier les informations personnelles d'un utilisateur, y compris son nom, prénom, date de naissance et mot de passe.",
-                "operationId": "6a4449867668a23cb41d29b13df34fff",
+                "operationId": "d7ce4099a7cc68ae723321efd740a8d9",
                 "requestBody": {
                     "required": true,
                     "content": {

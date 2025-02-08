@@ -12,6 +12,47 @@ use Symfony\Component\HttpFoundation\Response;
 class UtilisateurController
 {
 
+    /**
+     * @OA\Get(
+     *     path="/utilisateurs/informations",
+     *     summary="Récupérer mes informations à partir du token",
+     *     description="Cette méthode permet de récupérer les informations d'un utilisateur connecté excepté son mot de passe.",
+     *     tags={"Utilisateur"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Voici vos informations"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="utilisateur",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=12),
+     *                     @OA\Property(property="email", type="string", example="jean.dupon@gmail.com"),
+     *                     @OA\Property(property="nom", type="string", example="Dupon"),
+     *                     @OA\Property(property="prenom", type="string", example="Jean"),
+     *                     @OA\Property(property="date_naissance", type="string", format="date", example="1981-02-17")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non autorisé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Non autorisé.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
     public function informations(Request $request): JsonResponse
     {
         $utilisateur = $request->get('utilisateur');

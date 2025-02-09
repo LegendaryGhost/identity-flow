@@ -10,12 +10,14 @@ use App\Mail\ValidationInscription;
 use App\Models\CodePin;
 use App\Models\Token;
 use App\Models\Utilisateur;
+use App\Services\ApiService;
 use App\Utils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,6 +32,12 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthController extends Controller
 {
     private const TEMPORARY_USER_KEY = 'temp_user_';
+    private ApiService $apiService;
+
+    public function __construct(ApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
 
     /**
      * @OA\Post(
@@ -84,7 +92,7 @@ class AuthController extends Controller
             'nom' => $validatedData['nom'],
             'prenom' => $validatedData['prenom'],
             'date_naissance' => $validatedData['date_naissance'],
-            'mot_de_passe' => Hash::make($validatedData['mot_de_passe'])
+            'mot_de_passe' => $validatedData['mot_de_passe']
         ], $dureeInscritpion);
 
         Mail::to($validatedData['email'])->send(
@@ -132,7 +140,128 @@ class AuthController extends Controller
                 ->createJsonResponse();
         }
 
-        // Création de l'utilisateur Firebase
+        list($statusCode, $reponseFirebase) = $this->creerUtilisateurFirebase($utilisateurTemporaire);
+
+        if ($statusCode !== 200) {
+            return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firebase: " . ($reponseFirebase['error']['message'] ?? 'Erreur inconnue')))
+                ->createJsonResponse();
+        }
+
+        list($firestoreStatusCode, $firestoreReponse) = $this->creerProfilFireStore($reponseFirebase, $utilisateurTemporaire);
+
+        if ($firestoreStatusCode !== 200) {
+            return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firestore: " . ($firestoreReponse['error']['message'] ?? 'Erreur inconnue')))
+                ->createJsonResponse();
+        }
+
+        $this->creerUtilisateurIdentityFlow($utilisateurTemporaire, $reponseFirebase['localId']);
+
+        return (new SuccessResponseContent(Response::HTTP_CREATED, 'Votre email a été vérifié. Votre compte a été créé avec succès'))
+            ->createJsonResponse();
+    }
+
+    /**
+     * @param mixed $nouvelUtilisateur
+     * @param $localId
+     * @return Utilisateur utilisateur créé
+     */
+    public function creerUtilisateurIdentityFlow(mixed $nouvelUtilisateur, $localId): Utilisateur
+    {
+        return Utilisateur::create([
+            'id' => $localId,
+            'email' => $nouvelUtilisateur['email'],
+            'nom' => $nouvelUtilisateur['nom'] ?? '',
+            'prenom' => $nouvelUtilisateur['prenom'] ?? '',
+            'date_naissance' => $nouvelUtilisateur['date_naissance'] ?? Carbon::now()->format('Y-m-d'),
+            'mot_de_passe' => Hash::make($nouvelUtilisateur['mot_de_passe'])
+        ]);
+    }
+
+    /**
+     * Crée un nouveau profil dans Firestore avec l'uid comme identifiant
+     *
+     * @param mixed $reponseFirebase Réponse de l'authentification Firebase
+     * @param mixed $utilisateurTemporaire Données temporaires de l'utilisateur
+     * @return array Tableau contenant le code d'état et la réponse Firestore
+     */
+    public function creerProfilFireStore(mixed $reponseFirebase, mixed $utilisateurTemporaire): array
+    {
+        // Utilisation du uid comme identifiant unique pour le document
+        $firestoreId = $reponseFirebase['localId'];
+        $firestoreUrl = "https://firestore.googleapis.com/v1/projects/" .
+            Cache::get('firebase_app_id') .
+            "/databases/(default)/documents/profil/$firestoreId";
+
+        // Headers d'authentification
+        $firestoreHeaders = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $reponseFirebase['idToken']
+        ];
+
+        // Données du profil avec les champs requis
+        $profilData = [
+            'fields' => [
+                'dateNaissance' => [
+                    'stringValue' => Carbon::parse($utilisateurTemporaire['date_naissance'])
+                        ->format('Y-m-d\TH:i:s.v\Z')
+                ],
+                'fondActuel' => [
+                    'integerValue' => '0'
+                ],
+                'nom' => [
+                    'stringValue' => $utilisateurTemporaire['nom']
+                ],
+                'prenom' => [
+                    'stringValue' => $utilisateurTemporaire['prenom']
+                ],
+                'pdp' => [
+                    'stringValue' => ''
+                ],
+                'pushToken' => [
+                    'stringValue' => ''
+                ]
+            ]
+        ];
+
+        // Configuration de la requête HTTP avec timeout
+        $firestoreOptions = [
+            'http' => [
+                'method' => 'PATCH',
+                'content' => json_encode($profilData),
+                'header' => $firestoreHeaders,
+                'ignore_errors' => true,
+                'timeout' => 30
+            ]
+        ];
+
+        // Exécution de la requête avec gestion détaillée des erreurs
+        try {
+            $firestoreContext = stream_context_create($firestoreOptions);
+            $firestoreResponse = file_get_contents($firestoreUrl, false, $firestoreContext);
+
+            if ($firestoreResponse === false) {
+                $error = error_get_last();
+                throw new \Exception("Erreur Firestore: " . ($error['message'] ?? 'Erreur inconnue'));
+            }
+
+            $responseArray = json_decode($firestoreResponse, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception("Erreur de parsing JSON: " . json_last_error_msg());
+            }
+
+            return [http_response_code(), $responseArray];
+        } catch (\Exception $e) {
+            Log::error("Erreur Firestore - URL: $firestoreUrl - Message: " . $e->getMessage());
+            return [Response::HTTP_INTERNAL_SERVER_ERROR, ['error' => $e->getMessage()]];
+        }
+    }
+
+    /**
+     * @param mixed $utilisateurTemporaire
+     * @return array
+     */
+    public function creerUtilisateurFirebase(mixed $utilisateurTemporaire): array
+    {
         $url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" . Cache::get('firebase_key');
 
         $donnees = [
@@ -161,80 +290,11 @@ class AuthController extends Controller
 
         $statusCode = http_response_code();
         $reponseFirebase = json_decode($response, true);
-
-        if ($statusCode !== 200) {
-            return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firebase: " . ($reponseFirebase['error']['message'] ?? 'Erreur inconnue')))
-                ->createJsonResponse();
-        }
-
-        // Création du document Firestore
-        $firestoreUrl = "https://firestore.googleapis.com/v1/projects/" . Cache::get('firebase_app_id') . "/databases/(default)/documents/profil";
-        $firestoreHeaders = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $reponseFirebase['idToken']
-        ];
-
-        $profilData = [
-            'fields' => [
-                'dateNaissance' => [
-                    'stringValue' => Carbon::parse($utilisateurTemporaire['date_naissance'])
-                        ->format('Y-m-d\TH:i:s.v\Z')
-                ],
-                'fondActuel' => [
-                    'integerValue' => '0'
-                ],
-                'nom' => [
-                    'stringValue' => $utilisateurTemporaire['nom']
-                ],
-                'prenom' => [
-                    'stringValue' => $utilisateurTemporaire['prenom']
-                ],
-                'pdp' => [
-                    'stringValue' => ''
-                ],
-                'pushToken' => [
-                    'stringValue' => ''
-                ],
-                'uid' => [
-                    'stringValue' => $reponseFirebase['localId']
-                ]
-            ]
-        ];
-
-        $firestoreOptions = [
-            'http' => [
-                'method' => 'POST',
-                'content' => json_encode($profilData),
-                'header' => $firestoreHeaders,
-                'ignore_errors' => true
-            ]
-        ];
-
-        $firestoreContext = stream_context_create($firestoreOptions);
-        $firestoreResponse = file_get_contents($firestoreUrl, false, $firestoreContext);
-        $firestoreStatusCode = http_response_code();
-        $firestoreReponse = json_decode($firestoreResponse, true);
-
-        if ($firestoreStatusCode !== 200) {
-            return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firestore: " . ($firestoreReponse['error']['message'] ?? 'Erreur inconnue')))
-                ->createJsonResponse();
-        }
-
-        // Création de l'utilisateur dans Laravel
-        $utilisateur = Utilisateur::create([
-            'email' => $utilisateurTemporaire['email'],
-            'nom' => $utilisateurTemporaire['nom'],
-            'prenom' => $utilisateurTemporaire['prenom'],
-            'date_naissance' => $utilisateurTemporaire['date_naissance'],
-            'mot_de_passe' => $utilisateurTemporaire['mot_de_passe'],
-            'firebase_uid' => $reponseFirebase['localId']
-        ]);
-
-        return (new SuccessResponseContent(Response::HTTP_CREATED, 'Votre email a été vérifié. Votre compte a été créé avec succès'))
-            ->createJsonResponse();
+        return array($statusCode, $reponseFirebase);
     }
 
-    private function envoyerMailReinitialisation(Utilisateur $utilisateur) {
+    private function envoyerMailReinitialisation(Utilisateur $utilisateur): JsonResponse
+    {
         $dureeVieTentative = Cache::get('duree_vie_tentative');
         // cree un token de reinitialisation
         $token_tentative = Utils::generateToken();
@@ -273,6 +333,7 @@ class AuthController extends Controller
      *         description="Erreur interne du serveur."
      *     )
      * )
+     * @throws \Exception
      */
     public function connexion(Request $request): JsonResponse
     {
@@ -280,26 +341,72 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'mot_de_passe' => 'required'
         ]);
+
+        $url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" . Cache::get('firebase_key');
+
+        $donnees = [
+            'email' => $validatedData['email'],
+            'password' => $validatedData['mot_de_passe'],
+            'returnSecureToken' => true
+        ];
+
+        $headers = [
+            'Content-Type: application/json',
+        ];
+
+        $jsonDonnees = json_encode($donnees);
+
+        $options = [
+            'http' => [
+                'method' => 'POST',
+                'content' => $jsonDonnees,
+                'header' => $headers,
+                'ignore_errors' => true
+            ]
+        ];
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($url, false, $context);
+
+        $statusCode = http_response_code();
+        $reponseFirebase = json_decode($response, true);
+
         $utilisateur = Utilisateur::where('email', $validatedData['email'])->first();
 
-        if (!$utilisateur) {
+        if ($statusCode !== Response::HTTP_OK) {
+            if ($utilisateur) {
+                $utilisateur->tentatives_connexion++;
+                $utilisateur->save();
+            }
+
             return (new ErrorResponseContent(Response::HTTP_NOT_FOUND,
-                'Ces informations d\'identification ne correspondent pas à nos enregistrements.'))
+                'Ces informations d\'identification ne sont pas valides.'))
                 ->createJsonResponse();
+        }
+
+        $tokenFirebase = $reponseFirebase['idToken'] ?? null;
+        $refreshToken = $reponseFirebase['refreshToken'] ?? null;
+        $expirationDate = $reponseFirebase['expiresIn'] ?? null;
+
+        // Vérification des informations reçues
+        if (!$tokenFirebase || !$refreshToken || !$expirationDate) {
+            return (new ErrorResponseContent(
+                Response::HTTP_UNAUTHORIZED,
+                'Ces informations d\'identification ne sont pas valides.'
+            ))->createJsonResponse();
+        }
+
+        if (!$utilisateur) {
+            $utilisateur = $this->apiService->recupererInfoFirebase($tokenFirebase);
+            $utilisateur = $this->creerUtilisateurIdentityFlow(
+                $utilisateur,
+                $utilisateur['id']
+            );
         }
 
         $nombreTentative = Cache::get('nombre_tentative');
         if ($utilisateur->tentatives_connexion == $nombreTentative) {
             return $this->envoyerMailReinitialisation($utilisateur);
-        }
-
-        if (!Hash::check($validatedData['mot_de_passe'], $utilisateur->mot_de_passe)) {
-            $utilisateur->tentatives_connexion++;
-            $utilisateur->save();
-
-            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND,
-                'Ces informations d\'identification ne correspondent pas à nos enregistrements.'))
-                ->createJsonResponse();
         }
 
         $pin = Utils::generateCodePin();
@@ -311,7 +418,17 @@ class AuthController extends Controller
         ]);
         Mail::to($utilisateur->email)->send(new AuthMultiFacteur($utilisateur->nom, str_split($pin)));
 
-        return (new SuccessResponseContent(Response::HTTP_CREATED, "code de validation envoyer a " . $utilisateur->email))
+        // Créer un token
+        $dureeVieToken = Cache::get('duree_vie_token');
+        $tokenData = [
+            "valeur" => $tokenFirebase,
+            "date_heure_creation" => Carbon::now(),
+            "date_heure_expiration" => Carbon::now()->addSeconds($dureeVieToken),
+            "id_utilisateur" => $utilisateur->id
+        ];
+        Token::create($tokenData);
+
+        return (new SuccessResponseContent(Response::HTTP_CREATED, "code de validation envoyer à " . $utilisateur->email))
             ->createJsonResponse();
     }
 
@@ -384,23 +501,14 @@ class AuthController extends Controller
                 ->createJsonResponse();
         }
 
-        $token = Utils::generateToken();
-
-        $dureeVieToken = Cache::get('duree_vie_token');
-
-        $tokenData = [
-            "valeur" => $token,
-            "date_heure_creation" => Carbon::now(),
-            "date_heure_expiration" => Carbon::now()->addSeconds($dureeVieToken),
-            "id_utilisateur" => $utilisateur->id
-        ];
-        Token::create($tokenData);
+        $token = Token::where('id_utilisateur', $codePin['id_utilisateur'])
+            ->latest('date_heure_expiration')
+            ->first();
         $utilisateur->tentatives_connexion=0;
         $utilisateur->save();
 
         return (new SuccessResponseContent(Response::HTTP_OK, 'Utilisateur authentifié avec succès', ["token" => $token]))
             ->createJsonResponse();
-
     }
 
     /**

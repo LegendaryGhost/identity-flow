@@ -8,16 +8,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Utilisateur extends Model
 {
     public $timestamps = false;
-
     protected $table = 'utilisateur';
 
+    protected $primaryKey = 'id'; // Définir la clé primaire
+    public $incrementing = false; // Désactiver l'auto-incrémentation
+    protected $keyType = 'string'; // Spécifier que la clé est une string
+
     protected $fillable = [
+        'id',
         'email',
         'nom',
         'prenom',
         'mot_de_passe',
         'date_naissance',
-        'tentatives_connexion'
+        'tentatives_connexion',
+        'pdp'
     ];
 
     protected $hidden = ['mot_de_passe', 'tentatives_connexion'];

@@ -12,12 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('utilisateur', function (Blueprint $table) {
-            $table->id();
+            $table->string('id', 255); // ID en string au lieu d'un auto-increment
+            $table->primary('id'); // Définir explicitement la clé primaire
+
             $table->string('email', 75)->unique();
             $table->string('nom', 75);
             $table->string('prenom', 75);
             $table->string('mot_de_passe', 255);
             $table->date('date_naissance');
+            $table->string('pdp', 255)->nullable();
             $table->integer('tentatives_connexion')->default(0);
         });
 
@@ -26,7 +29,7 @@ return new class extends Migration
             $table->string('valeur', 255)->unique();
             $table->timestamp('date_heure_creation');
             $table->timestamp('date_heure_expiration')->nullable();
-            $table->unsignedBigInteger('id_utilisateur');
+            $table->string('id_utilisateur', 255);
 
             $table->foreign('id_utilisateur')
                 ->references('id')
@@ -38,7 +41,7 @@ return new class extends Migration
             $table->id();
             $table->string('valeur', 6);
             $table->timestamp('date_heure_expiration')->nullable();
-            $table->unsignedBigInteger('id_utilisateur');
+            $table->string('id_utilisateur', 255);
 
             $table->foreign('id_utilisateur')
                 ->references('id')

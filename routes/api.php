@@ -37,7 +37,7 @@ Route::controller(AuthController::class)
 
 Route::controller(UtilisateurController::class)
     ->prefix('/utilisateurs')
-    ->middleware('verify_bearer_token')
+//    ->middleware('verify_bearer_token')
     ->group(function () {
         Route::put('/', 'modification')
             ->middleware('ensure_json_api_requests');

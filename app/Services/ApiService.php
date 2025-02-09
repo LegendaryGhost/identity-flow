@@ -163,6 +163,7 @@ class ApiService
                 ? Carbon::parse($fields['dateNaissance']['stringValue'])->format('Y-m-d')
                 : null;
             $pdp = $fields['pdp']['stringValue'] ?? '';
+            $pushToken = $fields['$pushToken']['stringValue'] ?? '';
 
             // 🔹 Création de l'objet Utilisateur
             return new Utilisateur([
@@ -172,7 +173,8 @@ class ApiService
                 'prenom' => $prenom,
                 'date_naissance' => $dateNaissance,
                 'pdp' => $pdp,
-                'tentatives_connexion' => 0
+                'tentatives_connexion' => 0,
+                'push_token' => $pushToken,
             ]);
 
         } catch (\Exception $e) {

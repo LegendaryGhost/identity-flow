@@ -22,7 +22,8 @@ class Utilisateur extends Model
         'mot_de_passe',
         'date_naissance',
         'tentatives_connexion',
-        'pdp'
+        'pdp',
+        'push_token'
     ];
 
     protected $hidden = ['mot_de_passe', 'tentatives_connexion'];

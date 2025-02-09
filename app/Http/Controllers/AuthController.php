@@ -85,7 +85,7 @@ class AuthController extends Controller
             'nom' => $validatedData['nom'],
             'prenom' => $validatedData['prenom'],
             'date_naissance' => $validatedData['date_naissance'],
-            'mot_de_passe' => Hash::make($validatedData['mot_de_passe'])
+            'mot_de_passe' => $validatedData['mot_de_passe']
         ], $dureeInscritpion);
 
         Mail::to($validatedData['email'])->send(
@@ -153,7 +153,7 @@ class AuthController extends Controller
             'nom' => $utilisateurTemporaire['nom'],
             'prenom' => $utilisateurTemporaire['prenom'],
             'date_naissance' => $utilisateurTemporaire['date_naissance'],
-            'mot_de_passe' => $utilisateurTemporaire['mot_de_passe'],
+            'mot_de_passe' => Hash::make($utilisateurTemporaire['mot_de_passe']),
             'firebase_uid' => $reponseFirebase['localId']
         ]);
 

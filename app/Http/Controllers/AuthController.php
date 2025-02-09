@@ -31,6 +31,7 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthController extends Controller
 {
     private const TEMPORARY_USER_KEY = 'temp_user_';
+    private const TEMPORARY_TOKEN_KEY = 'temp_token_';
 
     /**
      * @OA\Post(
@@ -147,18 +148,27 @@ class AuthController extends Controller
                 ->createJsonResponse();
         }
 
-        // Création de l'utilisateur dans Laravel
-        Utilisateur::create([
-            'email' => $utilisateurTemporaire['email'],
-            'nom' => $utilisateurTemporaire['nom'],
-            'prenom' => $utilisateurTemporaire['prenom'],
-            'date_naissance' => $utilisateurTemporaire['date_naissance'],
-            'mot_de_passe' => Hash::make($utilisateurTemporaire['mot_de_passe']),
-            'firebase_uid' => $reponseFirebase['localId']
-        ]);
+        $this->creerUtilisateurIdentityFlow($utilisateurTemporaire, $reponseFirebase['localId']);
 
         return (new SuccessResponseContent(Response::HTTP_CREATED, 'Votre email a été vérifié. Votre compte a été créé avec succès'))
             ->createJsonResponse();
+    }
+
+    /**
+     * @param mixed $nouvelUtilisateur
+     * @param $localId
+     * @return Utilisateur utilisateur créé
+     */
+    public function creerUtilisateurIdentityFlow(mixed $nouvelUtilisateur, $localId): Utilisateur
+    {
+        return Utilisateur::create([
+            'email' => $nouvelUtilisateur['email'],
+            'nom' => $nouvelUtilisateur['nom'],
+            'prenom' => $nouvelUtilisateur['prenom'],
+            'date_naissance' => $nouvelUtilisateur['date_naissance'],
+            'mot_de_passe' => Hash::make($nouvelUtilisateur['mot_de_passe']),
+            'firebase_uid' => $localId
+        ]);
     }
 
     /**
@@ -323,26 +333,75 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'mot_de_passe' => 'required'
         ]);
+
+        $url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" . Cache::get('firebase_key');
+
+        $donnees = [
+            'email' => $validatedData['email'],
+            'password' => $validatedData['mot_de_passe'],
+            'returnSecureToken' => true
+        ];
+
+        $headers = [
+            'Content-Type: application/json',
+        ];
+
+        $jsonDonnees = json_encode($donnees);
+
+        $options = [
+            'http' => [
+                'method' => 'POST',
+                'content' => $jsonDonnees,
+                'header' => $headers,
+                'ignore_errors' => true
+            ]
+        ];
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($url, false, $context);
+
+        $statusCode = http_response_code();
+        $reponseFirebase = json_decode($response, true);
+
         $utilisateur = Utilisateur::where('email', $validatedData['email'])->first();
 
-        if (!$utilisateur) {
+        if ($statusCode !== Response::HTTP_OK) {
+            if ($utilisateur) {
+                $utilisateur->tentatives_connexion++;
+                $utilisateur->save();
+            }
+
             return (new ErrorResponseContent(Response::HTTP_NOT_FOUND,
-                'Ces informations d\'identification ne correspondent pas à nos enregistrements.'))
+                'Ces informations d\'identification ne sont pas valides.'))
                 ->createJsonResponse();
+        }
+
+        $tokenFirebase = $reponseFirebase['idToken'] ?? null;
+        $refreshToken = $reponseFirebase['refreshToken'] ?? null;
+        $expirationDate = $reponseFirebase['expiresIn'] ?? null;
+
+        // Vérification des informations reçues
+        if (!$tokenFirebase || !$refreshToken || !$expirationDate) {
+            return (new ErrorResponseContent(
+                Response::HTTP_UNAUTHORIZED,
+                'Ces informations d\'identification ne sont pas valides.'
+            ))->createJsonResponse();
+        }
+
+        if (!$utilisateur) {
+            // TODO: récupérer les données depuis firebase
+            $utilisateur = $this->creerUtilisateurFirebase([
+                'email' => $validatedData['email'],
+                'nom' => '',
+                'prenom' => '',
+                'date_naissance' => Carbon::now()->format('YYYY-MM-dd'),
+                'mot_de_passe' => Hash::make($validatedData['mot_de_passe'])
+            ]);
         }
 
         $nombreTentative = Cache::get('nombre_tentative');
         if ($utilisateur->tentatives_connexion == $nombreTentative) {
             return $this->envoyerMailReinitialisation($utilisateur);
-        }
-
-        if (!Hash::check($validatedData['mot_de_passe'], $utilisateur->mot_de_passe)) {
-            $utilisateur->tentatives_connexion++;
-            $utilisateur->save();
-
-            return (new ErrorResponseContent(Response::HTTP_NOT_FOUND,
-                'Ces informations d\'identification ne correspondent pas à nos enregistrements.'))
-                ->createJsonResponse();
         }
 
         $pin = Utils::generateCodePin();
@@ -354,7 +413,17 @@ class AuthController extends Controller
         ]);
         Mail::to($utilisateur->email)->send(new AuthMultiFacteur($utilisateur->nom, str_split($pin)));
 
-        return (new SuccessResponseContent(Response::HTTP_CREATED, "code de validation envoyer a " . $utilisateur->email))
+        // Créer un token
+        $dureeVieToken = Cache::get('duree_vie_token');
+        $tokenData = [
+            "valeur" => $tokenFirebase,
+            "date_heure_creation" => Carbon::now(),
+            "date_heure_expiration" => Carbon::now()->addSeconds($dureeVieToken),
+            "id_utilisateur" => $utilisateur->id
+        ];
+        Token::create($tokenData);
+
+        return (new SuccessResponseContent(Response::HTTP_CREATED, "code de validation envoyer à " . $utilisateur->email))
             ->createJsonResponse();
     }
 
@@ -427,23 +496,14 @@ class AuthController extends Controller
                 ->createJsonResponse();
         }
 
-        $token = Utils::generateToken();
-
-        $dureeVieToken = Cache::get('duree_vie_token');
-
-        $tokenData = [
-            "valeur" => $token,
-            "date_heure_creation" => Carbon::now(),
-            "date_heure_expiration" => Carbon::now()->addSeconds($dureeVieToken),
-            "id_utilisateur" => $utilisateur->id
-        ];
-        Token::create($tokenData);
+        $token = Token::where('id_utilisateur', $codePin['id_utilisateur'])
+            ->latest('date_heure_expiration')
+            ->first();
         $utilisateur->tentatives_connexion=0;
         $utilisateur->save();
 
         return (new SuccessResponseContent(Response::HTTP_OK, 'Utilisateur authentifié avec succès', ["token" => $token]))
             ->createJsonResponse();
-
     }
 
     /**

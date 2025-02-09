@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Responses\SuccessResponseContent;
 use App\Models\Utilisateur;
+use App\Services\ApiService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +13,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UtilisateurController
 {
+    private ApiService $apiService;
+
+    public function __construct(ApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
 
     /**
      * @OA\Get(
@@ -52,10 +60,12 @@ class UtilisateurController
      *         description="Erreur interne du serveur."
      *     )
      * )
+     * @throws Exception
      */
     public function informations(Request $request): JsonResponse
     {
-        $utilisateur = $request->get('utilisateur');
+        $tokenFirebase = $request->bearerToken();
+        $utilisateur = $this->apiService->recupererInfoFirebase($tokenFirebase);
 
         return (new SuccessResponseContent(Response::HTTP_OK, 'Voici vos informations'))
             ->setData(["utilisateur" => $utilisateur])

@@ -10,6 +10,7 @@ use App\Mail\ValidationInscription;
 use App\Models\CodePin;
 use App\Models\Token;
 use App\Models\Utilisateur;
+use App\Services\ApiService;
 use App\Utils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,12 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthController extends Controller
 {
     private const TEMPORARY_USER_KEY = 'temp_user_';
-    private const TEMPORARY_TOKEN_KEY = 'temp_token_';
+    private ApiService $apiService;
+
+    public function __construct(ApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
 
     /**
      * @OA\Post(
@@ -162,12 +168,12 @@ class AuthController extends Controller
     public function creerUtilisateurIdentityFlow(mixed $nouvelUtilisateur, $localId): Utilisateur
     {
         return Utilisateur::create([
+            'id' => $localId,
             'email' => $nouvelUtilisateur['email'],
-            'nom' => $nouvelUtilisateur['nom'],
-            'prenom' => $nouvelUtilisateur['prenom'],
-            'date_naissance' => $nouvelUtilisateur['date_naissance'],
-            'mot_de_passe' => Hash::make($nouvelUtilisateur['mot_de_passe']),
-            'firebase_uid' => $localId
+            'nom' => $nouvelUtilisateur['nom'] ?? '',
+            'prenom' => $nouvelUtilisateur['prenom'] ?? '',
+            'date_naissance' => $nouvelUtilisateur['date_naissance'] ?? Carbon::now()->format('Y-m-d'),
+            'mot_de_passe' => Hash::make($nouvelUtilisateur['mot_de_passe'])
         ]);
     }
 
@@ -287,7 +293,8 @@ class AuthController extends Controller
         return array($statusCode, $reponseFirebase);
     }
 
-    private function envoyerMailReinitialisation(Utilisateur $utilisateur) {
+    private function envoyerMailReinitialisation(Utilisateur $utilisateur): JsonResponse
+    {
         $dureeVieTentative = Cache::get('duree_vie_tentative');
         // cree un token de reinitialisation
         $token_tentative = Utils::generateToken();
@@ -326,6 +333,7 @@ class AuthController extends Controller
      *         description="Erreur interne du serveur."
      *     )
      * )
+     * @throws \Exception
      */
     public function connexion(Request $request): JsonResponse
     {
@@ -389,14 +397,11 @@ class AuthController extends Controller
         }
 
         if (!$utilisateur) {
-            // TODO: récupérer les données depuis firebase
-            $utilisateur = $this->creerUtilisateurFirebase([
-                'email' => $validatedData['email'],
-                'nom' => '',
-                'prenom' => '',
-                'date_naissance' => Carbon::now()->format('YYYY-MM-dd'),
-                'mot_de_passe' => Hash::make($validatedData['mot_de_passe'])
-            ]);
+            $utilisateur = $this->apiService->recupererInfoFirebase($tokenFirebase);
+            $utilisateur = $this->creerUtilisateurIdentityFlow(
+                $utilisateur,
+                $utilisateur['id']
+            );
         }
 
         $nombreTentative = Cache::get('nombre_tentative');

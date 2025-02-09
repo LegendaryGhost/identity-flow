@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response;
@@ -171,8 +172,6 @@ class AuthController extends Controller
     {
         // Utilisation du uid comme identifiant unique pour le document
         $firestoreId = $reponseFirebase['localId'];
-
-        // Construction de l'URL avec l'identifiant spécifique
         $firestoreUrl = "https://firestore.googleapis.com/v1/projects/" .
             Cache::get('firebase_app_id') .
             "/databases/(default)/documents/profil/$firestoreId";
@@ -208,28 +207,36 @@ class AuthController extends Controller
             ]
         ];
 
-        // Configuration de la requête HTTP
+        // Configuration de la requête HTTP avec timeout
         $firestoreOptions = [
             'http' => [
-                'method' => 'POST',
+                'method' => 'PATCH',
                 'content' => json_encode($profilData),
                 'header' => $firestoreHeaders,
-                'ignore_errors' => true
+                'ignore_errors' => true,
+                'timeout' => 30
             ]
         ];
 
-        // Exécution de la requête avec gestion des erreurs
+        // Exécution de la requête avec gestion détaillée des erreurs
         try {
             $firestoreContext = stream_context_create($firestoreOptions);
             $firestoreResponse = file_get_contents($firestoreUrl, false, $firestoreContext);
 
             if ($firestoreResponse === false) {
-                throw new \Exception("Erreur lors de la création du profil Firestore");
+                $error = error_get_last();
+                throw new \Exception("Erreur Firestore: " . ($error['message'] ?? 'Erreur inconnue'));
             }
 
-            return [http_response_code(), json_decode($firestoreResponse, true)];
+            $responseArray = json_decode($firestoreResponse, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception("Erreur de parsing JSON: " . json_last_error_msg());
+            }
+
+            return [http_response_code(), $responseArray];
         } catch (\Exception $e) {
-            return [500, ['error' => $e->getMessage()]];
+            Log::error("Erreur Firestore - URL: $firestoreUrl - Message: " . $e->getMessage());
+            return [Response::HTTP_INTERNAL_SERVER_ERROR, ['error' => $e->getMessage()]];
         }
     }
 

@@ -3,14 +3,74 @@
 namespace App\Http\Controllers;
 
 use App\Http\Responses\SuccessResponseContent;
+use App\Models\Utilisateur;
+use App\Services\ApiService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response;
 
 class UtilisateurController
 {
+    private ApiService $apiService;
+
+    public function __construct(ApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/utilisateurs/informations",
+     *     summary="Récupérer mes informations à partir du token",
+     *     description="Cette méthode permet de récupérer les informations d'un utilisateur connecté excepté son mot de passe.",
+     *     tags={"Utilisateur"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Voici vos informations"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="utilisateur",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=12),
+     *                     @OA\Property(property="email", type="string", example="jean.dupon@gmail.com"),
+     *                     @OA\Property(property="nom", type="string", example="Dupon"),
+     *                     @OA\Property(property="prenom", type="string", example="Jean"),
+     *                     @OA\Property(property="date_naissance", type="string", format="date", example="1981-02-17")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non autorisé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Non autorisé.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     * @throws Exception
+     */
+    public function informations(Request $request): JsonResponse
+    {
+        $tokenFirebase = $request->bearerToken();
+        $utilisateur = $this->apiService->recupererInfoFirebase($tokenFirebase);
+
+        return (new SuccessResponseContent(Response::HTTP_OK, 'Voici vos informations'))
+            ->setData(["utilisateur" => $utilisateur])
+            ->createJsonResponse();
+    }
 
     /**
      * @OA\Put(
@@ -79,5 +139,20 @@ class UtilisateurController
 
         return (new SuccessResponseContent(Response::HTTP_OK, 'Vos informations ont été mis à jour.'))
             ->createJsonResponse();
+    }
+    public function utilisateurParEmail($email): SuccessResponseContent|JsonResponse
+    {
+        $utilisateur = Utilisateur::where("email",$email)->first();
+        if (!$utilisateur) {
+            return (new SuccessResponseContent(Response::HTTP_NOT_FOUND, 'utilisateur non trouvé'))
+                ->createJsonResponse();
+        }
+        return (new SuccessResponseContent(Response::HTTP_OK,'utilisateur data',[
+            'email'=>$utilisateur->email,
+            'nom'=>$utilisateur->nom,
+            'prenom'=>$utilisateur->prenom,
+            'date_naissance'=>$utilisateur->date_naissance,
+        ]))->createJsonResponse();
+
     }
 }

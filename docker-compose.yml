@@ -1,6 +1,12 @@
+networks:
+    shared_network:
+        external: true
+
 services:
-    laravel_app:
+    laravel_identity_flow:
         container_name: laravel_identity_flow
+        networks:
+            - shared_network
         build:
             context: .
             dockerfile: Dockerfile
@@ -12,30 +18,27 @@ services:
             - .:/var/www/html
         depends_on:
             - postgres_identity_flow
-        # healthcheck:
-        #     test: ["CMD", "curl", "-f", "http://localhost:8000"]
-        #     interval: 30s
-        #     timeout: 10s
-        #     retries: 3
         restart: unless-stopped
 
     postgres_identity_flow:
         container_name: postgres_identity_flow
+        networks:
+            - shared_network
         image: postgres:15-alpine
         ports:
             - "5433:5432"
         environment:
+            POSTGRES_DB: identity_flow
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: identity_flow
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - identity_flow_postgres_data:/var/lib/postgresql/data
         healthcheck:
-            test: [ "CMD", "pg_isready", "-d", "postgres", "-U", "postgres" ]
-            timeout: 5s
-            retries: 5
-            start_period: 60s
+                test: [ "CMD", "pg_isready", "-d", "postgres", "-U", "postgres", "-p", "postgres" ]
+                timeout: 5s
+                retries: 5
+                start_period: 60s
         restart: unless-stopped
 
 volumes:
-    postgres_data: {}
+    identity_flow_postgres_data: {}

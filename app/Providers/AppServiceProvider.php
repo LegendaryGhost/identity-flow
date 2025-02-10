@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
             Cache::forever('nombre_tentative', env('NOMBRE_TENTATIVE', 3));
         }
 
-        if (!Cache::has('DUREE_VIE_LIEN_INSCRIPTION')) {
+        if (!Cache::has('duree_vie_inscription')) {
             Cache::forever('duree_vie_inscription', env('DUREE_VIE_LIEN_INSCRIPTION', 90));
         }
 

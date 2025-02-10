@@ -134,21 +134,18 @@ class AuthController extends Controller
     public function verificationEmail(string $tokenVerification): JsonResponse
     {
         $utilisateurTemporaire = Cache::pull(self::TEMPORARY_USER_KEY . $tokenVerification);
-
         if (!$utilisateurTemporaire) {
             return (new ErrorResponseContent(Response::HTTP_NOT_FOUND, 'Token de vérification invalide'))
                 ->createJsonResponse();
         }
 
         list($statusCode, $reponseFirebase) = $this->creerUtilisateurFirebase($utilisateurTemporaire);
-
         if ($statusCode !== 200) {
             return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firebase: " . ($reponseFirebase['error']['message'] ?? 'Erreur inconnue')))
                 ->createJsonResponse();
         }
 
         list($firestoreStatusCode, $firestoreReponse) = $this->creerProfilFireStore($reponseFirebase, $utilisateurTemporaire);
-
         if ($firestoreStatusCode !== 200) {
             return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firestore: " . ($firestoreReponse['error']['message'] ?? 'Erreur inconnue')))
                 ->createJsonResponse();
@@ -481,8 +478,6 @@ class AuthController extends Controller
             ->first();
         $expiration = Carbon::parse($codePin->date_heure_expiration);
 
-
-
         $nombreTentative = Cache::get('nombre_tentative');
         if ($utilisateur->tentatives_connexion == $nombreTentative) {
             return $this->envoyerMailReinitialisation($utilisateur);
@@ -504,10 +499,10 @@ class AuthController extends Controller
         $token = Token::where('id_utilisateur', $codePin['id_utilisateur'])
             ->latest('date_heure_expiration')
             ->first();
-        $utilisateur->tentatives_connexion=0;
+        $utilisateur->tentatives_connexion = 0;
         $utilisateur->save();
 
-        return (new SuccessResponseContent(Response::HTTP_OK, 'Utilisateur authentifié avec succès', ["token" => $token]))
+        return (new SuccessResponseContent(Response::HTTP_OK, 'Utilisateur authentifié avec succès', ["token" => $token["valeur"]]))
             ->createJsonResponse();
     }
 

@@ -204,8 +204,8 @@ class AuthController extends Controller
                     'stringValue' => Carbon::parse($utilisateurTemporaire['date_naissance'])
                         ->format('Y-m-d\TH:i:s.v\Z')
                 ],
-                'fondActuel' => [
-                    'integerValue' => '0'
+                'fondsActuel' => [
+                    'integerValue' => 0
                 ],
                 'nom' => [
                     'stringValue' => $utilisateurTemporaire['nom']
@@ -216,7 +216,7 @@ class AuthController extends Controller
                 'pdp' => [
                     'stringValue' => $utilisateurTemporaire['pdp']
                 ],
-                'pushToken' => [
+                'expoPushToken' => [
                     'stringValue' => ''
                 ]
             ]
@@ -228,8 +228,8 @@ class AuthController extends Controller
                 'method' => 'PATCH',
                 'content' => json_encode($profilData),
                 'header' => $firestoreHeaders,
-                'ignore_errors' => true,
-                'timeout' => 30
+                'ignore_errors' => false,
+                'timeout' => 60
             ]
         ];
 
@@ -251,7 +251,7 @@ class AuthController extends Controller
             return [http_response_code(), $responseArray];
         } catch (\Exception $e) {
             Log::error("Erreur Firestore - URL: $firestoreUrl - Message: " . $e->getMessage());
-            return [Response::HTTP_INTERNAL_SERVER_ERROR, ['error' => $e->getMessage()]];
+            throw $e;
         }
     }
 

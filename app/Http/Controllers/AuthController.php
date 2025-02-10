@@ -82,7 +82,8 @@ class AuthController extends Controller
             'nom' => ['required', 'string', 'max:75'],
             'prenom' => ['required', 'string', 'max:75'],
             'date_naissance' => ['required', 'date'],
-            'mot_de_passe' => ['required', 'string', 'min:6']
+            'mot_de_passe' => ['required', 'string', 'min:6'],
+            'pdp' => ['string']
         ]);
 
         $tokenVerification = Utils::generateToken();
@@ -92,7 +93,8 @@ class AuthController extends Controller
             'nom' => $validatedData['nom'],
             'prenom' => $validatedData['prenom'],
             'date_naissance' => $validatedData['date_naissance'],
-            'mot_de_passe' => $validatedData['mot_de_passe']
+            'mot_de_passe' => $validatedData['mot_de_passe'],
+            'pdp' => $validatedData['pdp'] ?? ''
         ], $dureeInscritpion);
 
         Mail::to($validatedData['email'])->send(
@@ -140,7 +142,7 @@ class AuthController extends Controller
         }
 
         list($statusCode, $reponseFirebase) = $this->creerUtilisateurFirebase($utilisateurTemporaire);
-        if ($statusCode !== 200) {
+        if ($statusCode !== 200 || $reponseFirebase === null || isset($reponseFirebase['error'])) {
             return (new ErrorResponseContent(Response::HTTP_INTERNAL_SERVER_ERROR, "Erreur Firebase: " . ($reponseFirebase['error']['message'] ?? 'Erreur inconnue')))
                 ->createJsonResponse();
         }
@@ -212,7 +214,7 @@ class AuthController extends Controller
                     'stringValue' => $utilisateurTemporaire['prenom']
                 ],
                 'pdp' => [
-                    'stringValue' => ''
+                    'stringValue' => $utilisateurTemporaire['pdp']
                 ],
                 'pushToken' => [
                     'stringValue' => ''
